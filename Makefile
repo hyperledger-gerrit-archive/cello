@@ -40,8 +40,8 @@ redeploy: ##@Service Redeploy single service, Use like "make redeploy service=da
 	bash scripts/redeploy.sh ${service}
 
 initial-env: ##@Configuration Initial Configuration for dashboard
-	sed -i 's/\(STATIC_FOLDER=\).*/\1${STATIC_FOLDER}/' .env
-	sed -i 's/\(TEMPLATE_FOLDER=\).*/\1${TEMPLATE_FOLDER}/' .env
+	sed -ix 's/\(STATIC_FOLDER=\).*/\1${STATIC_FOLDER}/' .env
+	sed -ix 's/\(TEMPLATE_FOLDER=\).*/\1${TEMPLATE_FOLDER}/' .env
 
 start: ##@Service Start service
 	@$(MAKE) initial-env
