@@ -13,11 +13,15 @@ We now have two channels for bug and questions:
 
 Jira tasks with `To Do` status are available for picking. If you want to handle one, assign it to yourself, and update the status to `In Progress`. Remember to mark it to `Done` when the patch is merged.
 
+You need Linux Foundation ID ( [LFID](https://identity.linuxfoundation.org/) ) to access Jira.
+ 
 ## Code Commit
 
 *Before committing code, please go to [Jira](https://jira.hyperledger.org/secure/RapidBoard.jspa?rapidView=85) to check existing tasks.*
 
 The project employs [Gerrit](https://gerrit.hyperledger.org) as the code commit/review system.
+
+Gerrit walk-through can be found [here](https://www.mediawiki.org/wiki/Gerrit/Tutorial). To get your hands dirty with Gerrit please feel free to make use of the [sandbox project](https://gerrit.hyperledger.org/r/#/admin/projects/lf-sandbox). 
 
 * Clone the project with your Linux Foundation ID (`LFID`), we suggest clone it into the `$GOPATH/src/github.com/hyperledger` directory so that it will build.
 
