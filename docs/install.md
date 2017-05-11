@@ -45,7 +45,7 @@ $ sudo service docker restart
 ```
 
 #### Ubuntu 16.04
-Update `/etc/systemd/system/docker.service.d/override.conf` like
+Update `/lib/systemd/system/docker.service` like
 
 ```
 [Service]
