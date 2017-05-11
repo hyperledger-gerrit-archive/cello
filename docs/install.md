@@ -45,7 +45,7 @@ $ sudo service docker restart
 ```
 
 #### Ubuntu 16.04
-Update `/etc/systemd/system/docker.service.d/override.conf` like
+Update `/lib/systemd/system/docker.service` like
 
 ```
 [Service]
@@ -56,7 +56,7 @@ ExecStart=/usr/bin/dockerd -H fd:// $DOCKER_OPTS
 ```
 
 Regenerate the docker service script and restart the docker engine:
- 
+
 ```sh
 $ sudo systemctl daemon-reload
 $ sudo systemctl restart docker.service
