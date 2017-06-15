@@ -1,3 +1,8 @@
+
+# Copyright IBM Corp, All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 import logging
 import os
 import sys
@@ -16,7 +21,6 @@ from modules import cluster_handler, host_handler
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
-
 
 bp_cluster_api = Blueprint('bp_cluster_api', __name__,
                            url_prefix='/{}'.format("api"))

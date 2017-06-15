@@ -1,8 +1,12 @@
+
+# Copyright IBM Corp, All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 import datetime
 import logging
 import os
 import sys
-
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import \

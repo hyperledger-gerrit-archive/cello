@@ -109,7 +109,6 @@ user_id:xxxxxxxx
 
 The server will drop the corresponding cluster, recreate it and put into available pool for future requests.
 
-
 #### Cluster Start, Stop or Restart
 
 Take `start` for example, you can specify the node_id if to operate one node.
@@ -152,7 +151,6 @@ size:4,
 
 Query the clusters for a user.
 
-
 ```
 POST /clusters
 {
@@ -167,3 +165,7 @@ GET /cluster/xxxxxxx
 ```
 
 Will return the json object whose data may contain detailed information of cluster.
+
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.
+

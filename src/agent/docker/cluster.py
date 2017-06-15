@@ -1,3 +1,8 @@
+
+# Copyright IBM Corp, All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 import logging
 import os
 import sys
@@ -12,7 +17,6 @@ from common import FABRIC_VERSION, CONSENSUS_PLUGINS, \
     CONSENSUS_MODES, CLUSTER_SIZES
 
 from ..cluster_base import ClusterBase
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)

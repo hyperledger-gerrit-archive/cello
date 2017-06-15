@@ -1,4 +1,3 @@
-
 #Monitoring services
 The monitoring services build in real time an archive of observations obtained from the analisys of the communication flows of the CELL application services.
 The observations could be checked in real time (directly in memory) against attacks, anomalies or errors.
@@ -14,3 +13,7 @@ to the configuration file: /src/common/utils.py
 Admin can add to the file /src/monitoring/config.py the following flags:
 * MONITOR_DB=<file name or network path where to store the persistent archive>
 * MONITOR_LEVEL=FULL | SIMPLE | NONE
+
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.
+

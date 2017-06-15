@@ -2,8 +2,6 @@
 
 Here we discuss the architecture design for the mangement services on the Master node.
 
-
-
 ## Philosophy and principles
 The architecture will follow the following principles:
 
@@ -44,3 +42,7 @@ I choose it for:
 * Good enough in performance
 * Flexible for extending
 * Stable in code
+
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.
+

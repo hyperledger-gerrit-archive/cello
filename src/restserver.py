@@ -1,3 +1,8 @@
+
+# Copyright IBM Corp, All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 import os
 from flask import Flask
 
@@ -11,7 +16,6 @@ app.config.from_envvar('CELLO_CONFIG_FILE', silent=True)
 
 app.logger.addHandler(log_handler)
 app.logger.setLevel(LOG_LEVEL)
-
 
 # app.register_blueprint(front_rest_v1)
 app.register_blueprint(front_rest_v2)

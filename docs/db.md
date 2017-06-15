@@ -49,3 +49,7 @@ xxx | {}   | cluster_A | ""       | host_xx |  tcp://10.0.0.1:2375 | pbft       
 * size (int): Peer nodes number of the chain
 * containers (list): List of the ids of those containers for the chain
 * health (str): 'OK' (healthy status) or 'Fail' (Not healthy)
+
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.
+

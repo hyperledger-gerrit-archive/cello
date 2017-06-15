@@ -1,6 +1,10 @@
+
+# Copyright IBM Corp, All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 import json
 import os
-
 
 CLUSTER_NETWORK = "cello_net"
 CLUSTER_SIZES = [4, 6, 7]
@@ -42,7 +46,6 @@ CONSENSUS_TYPES = [
     # ('pbft', 'classic'),
     # ('pbft', 'sieve'),
 ]
-
 
 HOST_TYPES = ['docker', 'swarm', 'kubernetes']  # all supported host types
 
