@@ -1,3 +1,8 @@
+/* Copyright IBM Corp, All Rights Reserved.
+
+ SPDX-License-Identifier: Apache-2.0
+ */
+
 import React, { PropTypes } from 'react'
 import ReactDOM from 'react-dom'
 import styles from './Search.less'
@@ -51,7 +56,6 @@ class Search extends React.Component {
     )
   }
 }
-
 
 Search.propTypes = {
   size: PropTypes.string,

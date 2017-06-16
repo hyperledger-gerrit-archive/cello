@@ -1,3 +1,8 @@
+/* Copyright IBM Corp, All Rights Reserved.
+
+ SPDX-License-Identifier: Apache-2.0
+ */
+
 // import DataTable from './DataTable'
 import DropOption from './DropOption'
 // import Iconfont from './Iconfont'
