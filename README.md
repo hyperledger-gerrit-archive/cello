@@ -4,7 +4,6 @@ Cello is a blockchain provision and operational system, which helps provide Bloc
 
 **Note:** This is a **read-only mirror** of the formal [Gerrit](https://gerrit.hyperledger.org/r/#/admin/projects/cello) repository. Find more details at [Cello Wiki](https://wiki.hyperledger.org/projects/cello).
 
-
 ## Introduction
 
 Using Cello, everyone can:
@@ -15,7 +14,7 @@ Using Cello, everyone can:
 
 ![Typical Scenario](docs/imgs/scenario.png)
 
-Explore more [scenarios](docs/scenario.md).
+Feel free to explore more [scenarios](docs/scenario.md).
 
 ## Main Features
 
