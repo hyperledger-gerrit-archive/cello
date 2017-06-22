@@ -32,7 +32,7 @@ The project employs [Gerrit](https://gerrit.hyperledger.org) as the code commit/
 
 *Before committing code, please go to [Jira](https://jira.hyperledger.org/projects/CE) to create a new task or check if there's related existing one, then assign yourself as the assignee. Notice each task will get a Jira number like [CE-26](https://jira.hyperledger.org/browse/CE-26).
 
-* Clone the project to your working directory with your `LFID`. 
+* Clone the project to your working directory with your `LFID`.
 
 ```sh
 $ git clone ssh://LFID@gerrit.hyperledger.org:29418/cello && scp -p -P 29418 LFID@gerrit.hyperledger.org:hooks/commit-msg cello/.git/hooks/
@@ -105,3 +105,6 @@ Notice you will get a [gerrit item url](http://gerrit.hyperledger.org/r/7915), o
 After the ci checking passed, add [reviewers](https://wiki.hyperledger.org/projects/cello#contributors) to the reviewer list and also post the gerrit item url at the [RocketChat channel](https://chat.hyperledger.org/channel/cello). The patch will be merged into the `master` branch after passing the review, then mark the Jira item as `Done`.
 
 * If you need to refine the patch further as the reviewers may suggest, you can change on the same branch, and commit the new code with `git commit -a --amend`, and then use the `git review` command again.
+
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.
