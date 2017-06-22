@@ -31,3 +31,6 @@ In the production environment
 ```sh
 $ make build-js
 ```
+
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.

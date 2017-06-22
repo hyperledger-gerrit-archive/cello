@@ -2,13 +2,11 @@
 
 Here we discuss the architecture design for the mangement services on the Master node.
 
-
-
 ## Philosophy and principles
 The architecture will follow the following principles:
 
 * Micro-service: Means we decouple various functions to individual micro services. No service will crash others whatever it does.
-* Fault-resilience: Means the service should be tolerant for fault, such as database crash. 
+* Fault-resilience: Means the service should be tolerant for fault, such as database crash.
 * Scalability: Try best to distribute the services, to mitigate centralized bottle neck.
 
 ## Functional Layers
@@ -44,3 +42,6 @@ I choose it for:
 * Good enough in performance
 * Flexible for extending
 * Stable in code
+
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.
