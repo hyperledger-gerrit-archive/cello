@@ -36,7 +36,10 @@ GET /v1/cluster_release?user_id=xxxxxxxx
 ```
 The server will drop the corresponding cluster, recreate it and put into available pool for future requests.
 
-
 ## Admin
 Those APIs should not be called by outside applications. Just for
 information, please see [api-admin.yaml](api-admin.yaml)
+
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.
+

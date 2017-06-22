@@ -13,14 +13,11 @@ The left panel gives quick link to various functions, including `overview`, `sys
 | Inused Clusters | `/clusters?type=inused` | Operate on user occupied chains in the system |
 | Released History  | `/clusters?type=released` | See cluster releasing history data |
 
-
 ## Overview
 
 ![Dashboard Overview](imgs/dashboard_overview.png)
 
-
 The default overview page show the overall status of the system, e.g., how many hosts are deployed within the system, how many clusters are running on those hosts. And there are status numbers for both hosts and clusters.
-
 
 ## System Status Page
 
@@ -48,11 +45,9 @@ You can click the `Add Host` button to add more hosts into the pool.
 
 ![dashboard add-host](imgs/dashboard_add_host.png)
 
-
 ## Active Chains
 
 The `Active Chains` page shows all existing running chains in the system, with their Name, Type, Status, Health, Size and Host. Those inused chains will have a grey line.
-
 
 ![dashboard clusters](imgs/dashboard_clusters.png)
 
@@ -68,7 +63,6 @@ You can click the `Add Chain` button to add more chains into the pool if there a
 
 ![dashboard add-cluster](imgs/dashboard_add_cluster.png)
 
-
 ## Inused Chains
 
 Filter out those running chains that are occupied by users.
@@ -78,4 +72,5 @@ Filter out those running chains that are occupied by users.
 Record all the user releasing chain history.
 
 
-
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.
