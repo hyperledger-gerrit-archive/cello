@@ -49,3 +49,5 @@ Server:
 13. You should be able to open the link *http://MasternodeIP:8080* .You can login and add hosts. Once the hosts are added, you can create blockchains.
 
 
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.

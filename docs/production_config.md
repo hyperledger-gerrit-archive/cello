@@ -40,3 +40,7 @@ Log
 * Security: Use firewall to filter traffic, enable TLS and authentication.
 * Backup: Enable automatic data backup.
 * Monitoring: Enable monitoring services.out and login, then check with `ulimit -n`.
+
+## License <a name="license"></a>.
+The Hyperledger Cello project uses the [Apache License Version 2.0](LICENSE) software license.
+
