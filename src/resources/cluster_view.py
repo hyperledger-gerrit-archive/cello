@@ -73,7 +73,7 @@ def clusters_show():
     return render_template("clusters.html", type=show_type, col_name=col_name,
                            items_count=total_items, items=clusters,
                            hosts_available=hosts_avail,
-                           fabric_version=NETWORK_TYPES,
+                           network_type=NETWORK_TYPES,
                            consensus_plugins=CONSENSUS_PLUGINS,
                            consensus_modes=CONSENSUS_MODES,
                            cluster_sizes=CLUSTER_SIZES)

@@ -1,45 +1,48 @@
+# Copyright IBM Corp, All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 from common.blockchain_network_config import BlockchainNetworkConfig
-from common.utils import NETWORK_TYPES
+
+from common import CONSENSUS_PLUGINS
 
 
-class FabricNetworkConfig(BlockchainNetworkConfig):
+class FabricPreNetworkConfig(BlockchainNetworkConfig):
     """
-    FabricNetworkConfig includes those configuration data for a fabric network.
+    FabricPreNetworkConfig includes configs for fabric v0.6 network.
     """
 
-    def __init__(self, data=None, metadata=None):
+    def __init__(self, consensus_plugin, consensus_mode, size):
         """
         Init.
 
         Args:
-            data: config data related to the fabric network.
-            metadata: metadata is for cello usage.
-        """
-        if not data:
-            data = {  # will be used in compose template as the network config
-                'for_test': NETWORK_TYPES[0]
-            }
+            consensus_plugin: consensus plugin to use, e.g., pbft
+            consensus_mode: consensus mode, e.g., sieve
+            size: size of nodes in the network
 
-        if not metadata:
-            metadata = {  # for cello usage
-                'name': 'FABRIC_NETWORK_{}'.format('test'),  # TODO: randomlize
-                'type': NETWORK_TYPES[0],  # network of the blockchain
-                'worker_api': '',  # which worker will handle this network
-                'envs': {}  # env variables to setup, before sending request
-                # to worker. Can be used for compose template files
-            }
-        super(FabricNetworkConfig, self).__init__(data, metadata)
+        >>> config = FabricPreNetworkConfig('plugin', 'mode', 'size')
+        """
+        self.consensus_plugin = consensus_plugin
+        self.consensus_mode = consensus_mode
+        self.size = size
+        super(FabricPreNetworkConfig, self).__init__()
 
-    def get_data(self):
-        """
-        Get the configuration data
-        Returns: data dict
-        """
-        return self.data
 
-    def get_metadata(self):
+class FabricV1NetworkConfig(BlockchainNetworkConfig):
+    """
+    FabricV1NetworkConfig includes configs for fabric v1.0 network.
+    """
+
+    def __init__(self):
         """
-        Get the metadata
-        Returns: metadata dict
+        Init.
+
+        Args:
         """
-        return self.metadata
+        super(FabricV1NetworkConfig, self).__init__()
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

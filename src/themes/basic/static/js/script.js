@@ -6,7 +6,7 @@
 
 $(document).ready(function () {
 
-    $('#fabric_version').change(function() {
+    $('#network_type').change(function() {
 
         var $consensus_plugin = $('#consensus_plugin');
         var $cluster_size = $('#cluster_size');

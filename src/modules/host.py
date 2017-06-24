@@ -42,7 +42,7 @@ def check_status(func):
 class HostHandler(object):
     """ Main handler to operate the hosts.
 
-    Host can be platforms like Docker, Swarm or Kubernetes
+    A host can be a worker like Docker host, Swarm or Kubernetes
     """
     def __init__(self):
         self.col = db["host"]

@@ -11,10 +11,14 @@ from .response import make_ok_response, make_fail_response, CODE_NOT_FOUND,\
 from .log import log_handler, LOG_LEVEL
 from .utils import \
     PEER_SERVICE_PORTS, CA_SERVICE_PORTS, SERVICE_PORTS, \
-    NETWORK_TYPES, CONSENSUS_PLUGINS, CONSENSUS_MODES, CONSENSUS_TYPES, \
+    NETWORK_TYPES, NETWORK_TYPE_FABRIC_1, NETWORK_TYPE_FABRIC_PRE_V1, \
+    CONSENSUS_PLUGINS, CONSENSUS_MODES, CONSENSUS_TYPES, \
     HOST_TYPES, \
     CLUSTER_PORT_START, CLUSTER_PORT_STEP, CLUSTER_SIZES, \
     CLUSTER_NETWORK, \
     CLUSTER_LOG_TYPES, CLUSTER_LOG_LEVEL, \
     SYS_CREATOR, SYS_DELETER, SYS_RESETTING, SYS_USER, \
     request_debug, request_get, request_json_body
+
+from .fabric_network_config import \
+    FabricPreNetworkConfig, FabricV1NetworkConfig

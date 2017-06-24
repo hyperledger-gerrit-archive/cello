@@ -1,4 +1,3 @@
-
 # Copyright IBM Corp, All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -14,8 +13,11 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, \
     request_get, make_ok_response, make_fail_response, \
     request_debug, request_json_body, \
-    CODE_CREATED, CODE_NOT_FOUND, NETWORK_TYPES, \
-    CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES
+    CODE_CREATED, CODE_NOT_FOUND, \
+    NETWORK_TYPE_FABRIC_PRE_V1, NETWORK_TYPE_FABRIC_1, \
+    CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES, \
+    FabricPreNetworkConfig, FabricV1NetworkConfig
+
 from modules import cluster_handler, host_handler
 
 logger = logging.getLogger(__name__)
@@ -212,41 +214,43 @@ def cluster_create():
     logger.info("/cluster action=" + r.method)
     request_debug(r, logger)
     if not r.form["name"] or not r.form["host_id"] \
-            or not r.form["fabric_version"] \
+            or not r.form["network_type"] \
             or not r.form["consensus_plugin"] or not r.form["size"]:
         error_msg = "cluster post without enough data"
         logger.warning(error_msg)
         return make_fail_response(error=error_msg, data=r.form)
-    else:
-        name, host_id, fabric_version, consensus_plugin, \
-            consensus_mode, size = r.form['name'], r.form['host_id'], \
-            r.form['fabric_version'], r.form['consensus_plugin'], \
-            r.form['consensus_mode'] or '', int(r.form["size"])
-        if consensus_plugin not in CONSENSUS_PLUGINS:
-            logger.debug("Unknown consensus_plugin={}".format(
-                consensus_plugin))
-            return make_fail_response()
-        if consensus_plugin != CONSENSUS_PLUGINS[0] \
-           and consensus_plugin != CONSENSUS_PLUGINS[2] \
-           and consensus_mode not in CONSENSUS_MODES:
-            logger.debug("Invalid consensus, plugin={}, mode={}".format(
-                consensus_plugin, consensus_mode))
-            return make_fail_response()
 
-        if size not in CLUSTER_SIZES:
-            logger.debug("Unknown cluster size={}".format(size))
-            return make_fail_response()
-        if cluster_handler.create(name=name, host_id=host_id,
-                                  fabric_version=fabric_version,
-                                  consensus_plugin=consensus_plugin,
-                                  consensus_mode=consensus_mode,
-                                  size=size):
-            logger.debug("cluster POST successfully")
-            return make_ok_response(code=CODE_CREATED)
-        else:
-            logger.debug("cluster creation failed")
-            return make_fail_response(error="Failed to create cluster {}".
-                                      format(name))
+    name, host_id, network_type, consensus_plugin, \
+        consensus_mode, size = r.form['name'], r.form['host_id'], \
+        r.form['network_type'], r.form['consensus_plugin'], \
+        r.form['consensus_mode'] or '', int(r.form["size"])
+    if consensus_plugin not in CONSENSUS_PLUGINS:
+        logger.debug("Unknown consensus_plugin={}".format(
+            consensus_plugin))
+        return make_fail_response()
+    if consensus_plugin != CONSENSUS_PLUGINS[0] \
+       and consensus_plugin != CONSENSUS_PLUGINS[2] \
+       and consensus_mode not in CONSENSUS_MODES:
+        logger.debug("Invalid consensus, plugin={}, mode={}".format(
+            consensus_plugin, consensus_mode))
+        return make_fail_response()
+
+    if size not in CLUSTER_SIZES:
+        logger.debug("Unknown cluster size={}".format(size))
+        return make_fail_response()
+    if network_type == NETWORK_TYPE_FABRIC_PRE_V1:
+        config = FabricPreNetworkConfig(consensus_plugin=consensus_plugin,
+                                        consensus_mode=consensus_mode,
+                                        size=size)
+
+    if cluster_handler.create(name=name, host_id=host_id,
+                              network_type=network_type, config=config):
+        logger.debug("cluster POST successfully")
+        return make_ok_response(code=CODE_CREATED)
+    else:
+        logger.debug("cluster creation failed")
+        return make_fail_response(error="Failed to create cluster {}".
+                                  format(name))
 
 
 @bp_cluster_api.route('/cluster', methods=['DELETE'])

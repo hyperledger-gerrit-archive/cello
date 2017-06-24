@@ -35,7 +35,10 @@ CA_SERVICE_PORTS = {
 SERVICE_PORTS = dict(list(PEER_SERVICE_PORTS.items()) +
                      list(CA_SERVICE_PORTS.items()))
 
-NETWORK_TYPES = ['fabric-0.6', 'fabric-1.0']  # first one is the default one
+NETWORK_TYPE_FABRIC_PRE_V1= 'fabric-0.6'
+NETWORK_TYPE_FABRIC_1='fabric-1.0'
+
+NETWORK_TYPES = [NETWORK_TYPE_FABRIC_PRE_V1, NETWORK_TYPE_FABRIC_1]  # first one is the default one
 
 CONSENSUS_PLUGINS = ['noops', 'pbft', 'solo']  # first one is the default one
 # CONSENSUS_MODES = ['classic', 'batch', 'sieve']  # pbft has various modes

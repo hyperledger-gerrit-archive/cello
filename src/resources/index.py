@@ -55,7 +55,7 @@ def show():
                            clusters_inuse=clusters_inuse,
                            clusters_temp=clusters_temp,
                            cluster_sizes=CLUSTER_SIZES,
-                           fabric_version=NETWORK_TYPES,
+                           network_type=NETWORK_TYPES,
                            consensus_plugins=CONSENSUS_PLUGINS,
                            consensus_modes=CONSENSUS_MODES,
                            host_types=HOST_TYPES,

@@ -19,7 +19,8 @@ from common import db, log_handler, LOG_LEVEL
 
 from agent import get_swarm_node_ip
 
-from common import CLUSTER_PORT_START, CLUSTER_PORT_STEP, NETWORK_TYPES, \
+from common import CLUSTER_PORT_START, CLUSTER_PORT_STEP, \
+    NETWORK_TYPE_FABRIC_PRE_V1, NETWORK_TYPE_FABRIC_1, \
     CONSENSUS_PLUGINS, CONSENSUS_MODES, HOST_TYPES, SYS_CREATOR, SYS_DELETER, \
     SYS_USER, SYS_RESETTING, CLUSTER_SIZES, \
     PEER_SERVICE_PORTS, CA_SERVICE_PORTS
@@ -85,38 +86,36 @@ class ClusterHandler(object):
             return {}
         return self._serialize(cluster)
 
-    def create(self, name, host_id, start_port=0, user_id="",
-               fabric_version=NETWORK_TYPES[0],
-               consensus_plugin=CONSENSUS_PLUGINS[0],
-               consensus_mode=CONSENSUS_MODES[0], size=CLUSTER_SIZES[0]):
+    def create(self, name, host_id, network_type, config, start_port=0,
+               user_id=""):
         """ Create a cluster based on given data
 
         TODO: maybe need other id generation mechanism
+        Args:
 
-        :param name: name of the cluster
-        :param host_id: id of the host URL
-        :param start_port: first service port for cluster, will generate
-         if not given
-        :param user_id: user_id of the cluster if start to be applied
-        :param consensus_plugin: type of the consensus type
-        :param size: size of the cluster, int type
-        :return: Id of the created cluster or None
+            name: name of the cluster
+            host_id: id of the host URL
+            network_type: type of the network
+            config: network configuration
+            start_port: first service port for cluster, will generate
+             if not given
+            user_id: user_id of the cluster if start to be applied
+
+        return: Id of the created cluster or None
         """
-        logger.info("Create cluster {}, host_id={}, fabric_version={}, "
-                    "consensus={}/{}, size={}"
-                    .format(name, host_id, fabric_version,
-                            consensus_plugin, consensus_mode, size))
+        logger.info("Create cluster {}, host_id={}, config={}"
+                    .format(name, host_id, network_type, config.get_data()))
 
-        h = self.host_handler.get_active_host_by_id(host_id)
-        if not h:
+        worker = self.host_handler.get_active_host_by_id(host_id)
+        if not worker:
             return None
 
-        if len(h.get("clusters")) >= h.get("capacity"):
+        if len(worker.get("clusters")) >= worker.get("capacity"):
             logger.warning("host {} is full already".format(host_id))
             return None
 
-        daemon_url = h.get("daemon_url")
-        logger.debug("daemon_url={}".format(daemon_url))
+        host_api = worker.get("host_api")
+        logger.debug("host_api={}".format(host_api))
 
         if start_port <= 0:
             ports = self.find_free_start_ports(host_id, 1)
@@ -134,33 +133,39 @@ class ClusterHandler(object):
         mapped_ports.update(peer_mapped_ports)
         mapped_ports.update(ca_mapped_ports)
 
-        c = {
+        net = {
             'id': '',
             'name': name,
             'user_id': user_id or SYS_CREATOR,  # avoid applied
             'host_id': host_id,
-            'daemon_url': daemon_url,
-            'fabric_version': fabric_version,
-            'consensus_plugin': consensus_plugin,
-            'consensus_mode': consensus_mode,
+            'host_api': host_api,
+            'network_type': network_type,  # e.g., fabric-1.0
             'create_ts': datetime.datetime.now(),
             'apply_ts': '',
             'release_ts': '',
-            'duration': '',
-            'mapped_ports': mapped_ports,
-            'service_url': {},  # e.g., {rest: xxx:7050, grpc: xxx:7051}
-            'size': size,
-            'containers': [],
             'status': 'running',
+            'containers': [],
+            'duration': '',
             'health': ''
         }
-        uuid = self.col_active.insert_one(c).inserted_id  # object type
+        if network_type == NETWORK_TYPE_FABRIC_PRE_V1: # fabric v0.6
+            net.update({  # net is a blockchain network instance
+                'mapped_ports': mapped_ports,
+                'service_url': {},  # e.g., {rest: xxx:7050, grpc: xxx:7051}
+            })
+            net.update(config)
+        elif network_type == NETWORK_TYPE_FABRIC_1: # TODO: fabric v1.0
+            net.update({
+            })
+            net.update(config)
+
+        uuid = self.col_active.insert_one(net).inserted_id  # object type
         cid = str(uuid)
         self.col_active.update_one({"_id": uuid}, {"$set": {"id": cid}})
-        # try to add one cluster to host
-        h = self.host_handler.db_update_one(
+        # try to start one cluster at the host
+        worker = self.host_handler.db_update_one(
             {"id": host_id}, {"$addToSet": {"clusters": cid}})
-        if not h or len(h.get("clusters")) > h.get("capacity"):
+        if not worker or len(worker.get("clusters")) > worker.get("capacity"):
             self.col_active.delete_one({"id": cid})
             self.host_handler.db_update_one({"id": host_id},
                                             {"$pull": {"clusters": cid}})
@@ -170,11 +175,9 @@ class ClusterHandler(object):
 
         # start compose project, failed then clean and return
         logger.debug("Start compose project with name={}".format(cid))
-        containers = self.cluster_agents[h.get('type')]\
-            .create(cid, mapped_ports, h, user_id=user_id,
-                    fabric_version=fabric_version,
-                    consensus_plugin=consensus_plugin,
-                    consensus_mode=consensus_mode, size=size)
+        containers = self.cluster_agents[worker.get('type')]\
+            .create(cid, mapped_ports, worker, user_id=user_id,
+                    network_type=network_type, config=config)
         if not containers:
             logger.warning("failed to start cluster={}, then delete"
                            .format(name))
@@ -252,9 +255,9 @@ class ClusterHandler(object):
             self.col_active.update_one(
                 {"id": id},
                 {"$set": {"user_id": SYS_DELETER + user_id}})
-        host_id, daemon_url, fabric_version, consensus_plugin, cluster_size = \
+        host_id, daemon_url, network_type, consensus_plugin, cluster_size = \
             c.get("host_id"), c.get("daemon_url"), \
-            c.get("fabric_version", NETWORK_TYPES[0]), \
+            c.get("network_type", NETWORK_TYPES[0]), \
             c.get("consensus_plugin", CONSENSUS_PLUGINS[0]), \
             c.get("size", CLUSTER_SIZES[0])
 
@@ -267,7 +270,7 @@ class ClusterHandler(object):
             return False
 
         if not self.cluster_agents[h.get('type')]\
-                .delete(id, daemon_url, fabric_version,
+                .delete(id, daemon_url, network_type,
                         consensus_plugin, cluster_size):
             logger.warning("Error to run compose clean work")
             self.col_active.update_one({"id": id},
@@ -387,7 +390,7 @@ class ClusterHandler(object):
         result = self.cluster_agents[h.get('type')].start(
             name=cluster_id, daemon_url=h.get('daemon_url'),
             mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
-            fabric_version=c.get('fabric_version'),
+            network_type=c.get('network_type'),
             consensus_plugin=c.get('consensus_plugin'),
             consensus_mode=c.get('consensus_mode'),
             log_type=h.get('log_type'),
@@ -420,7 +423,7 @@ class ClusterHandler(object):
         result = self.cluster_agents[h.get('type')].restart(
             name=cluster_id, daemon_url=h.get('daemon_url'),
             mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
-            fabric_version=c.get('fabric_version'),
+            network_type=c.get('network_type'),
             consensus_plugin=c.get('consensus_plugin'),
             consensus_mode=c.get('consensus_mode'),
             log_type=h.get('log_type'),
@@ -453,7 +456,7 @@ class ClusterHandler(object):
         result = self.cluster_agents[h.get('type')].stop(
             name=cluster_id, daemon_url=h.get('daemon_url'),
             mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
-            fabric_version=c.get('fabric_version'),
+            network_type=c.get('network_type'),
             consensus_plugin=c.get('consensus_plugin'),
             consensus_mode=c.get('consensus_mode'),
             log_type=h.get('log_type'),
@@ -480,10 +483,10 @@ class ClusterHandler(object):
 
         c = self.get_by_id(cluster_id)
         logger.debug("Run recreate_work in background thread")
-        cluster_name, host_id, mapped_ports, fabric_version, \
+        cluster_name, host_id, mapped_ports, network_type, \
             consensus_plugin, consensus_mode, size = \
             c.get("name"), c.get("host_id"), \
-            c.get("mapped_ports"), c.get("fabric_version"), \
+            c.get("mapped_ports"), c.get("network_type"), \
             c.get("consensus_plugin"), \
             c.get("consensus_mode"), c.get("size")
         if not self.delete(cluster_id, record=record, forced=True):
@@ -491,7 +494,7 @@ class ClusterHandler(object):
             return False
         if not self.create(name=cluster_name, host_id=host_id,
                            start_port=mapped_ports['rest'],
-                           fabric_version=fabric_version,
+                           network_type=network_type,
                            consensus_plugin=consensus_plugin,
                            consensus_mode=consensus_mode, size=size):
             logger.warning("Fail to recreate cluster {}".format(cluster_name))
@@ -515,7 +518,7 @@ class ClusterHandler(object):
         return self.reset(cluster_id)
 
     def _serialize(self, doc, keys=('id', 'name', 'user_id', 'host_id',
-                                    'fabric_version',
+                                    'network_type',
                                     'consensus_plugin',
                                     'consensus_mode', 'daemon_url',
                                     'create_ts', 'apply_ts', 'release_ts',
