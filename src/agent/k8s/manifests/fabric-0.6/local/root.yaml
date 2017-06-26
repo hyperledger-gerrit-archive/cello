@@ -1,0 +1,101 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: hyperledger-root
+  labels:
+    app: hyperledger
+    role: root
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: hyperledger-root-container
+      labels:
+        role: root
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: root-container
+          imagePullPolicy: Never
+          image: hyperledger/fabric-peer:latest
+          ports:
+            - containerPort: 7050
+            - containerPort: 7051
+            - containerPort: 7052
+            - containerPort: 7053
+            - containerPort: 7054
+            - containerPort: 7055
+            - containerPort: 7056
+            - containerPort: 7057
+            - containerPort: 7058
+            - containerPort: 7059
+          env:
+            - name: CORE_PEER_ID
+              value: vp0
+            - name: CORE_PEER_ADDRESSAUTODETECT
+              value: "true"
+            - name: CORE_PEER_NETWORKID
+              value: "dev"
+            - name: CORE_LOGGING_LEVEL
+              value: "info"  #critical, error, warning, notice, info, debug
+           #- CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_pbft  # uncomment this to use specific network
+            # The following section enables pbft consensus
+            - name: CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN
+              value: "pbft"  # noops, pbft
+            - name: CORE_PBFT_GENERAL_MODE
+              value: "batch"  # batch. classic and sieve will be not supported again.
+            - name: CORE_PBFT_GENERAL_N
+              value: "4"
+            - name: CORE_PBFT_GENERAL_BATCHSIZE
+              value: "2"  # only useful when in batch mode
+            - name: CORE_PBFT_GENERAL_TIMEOUT_REQUEST
+              value: "2s"
+          args:
+            - sh
+            - -c
+            - "sleep 10; peer node start"
+            # - peer
+            # - node
+            # - start
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vp0
+  labels:
+    app: root
+spec:
+  type: ClusterIP
+  ports:
+    - name: "7050"
+      targetPort: 7050
+      port: 7050
+    - name: "7051"
+      targetPort: 7051
+      port: 7051
+    - name: "7052"
+      targetPort: 7052
+      port: 7052
+    - name: "7053"
+      targetPort: 7053
+      port: 7053
+    - name: "7054"
+      targetPort: 7054
+      port: 7054
+    - name: "7055"
+      targetPort: 7055
+      port: 7055
+    - name: "7056"
+      targetPort: 7056
+      port: 7056
+    - name: "7057"
+      targetPort: 7057
+      port: 7057
+    - name: "7058"
+      targetPort: 7058
+      port: 7058
+    - name: "7059"
+      targetPort: 7059
+      port: 7059
+  selector:
+    role: root
