@@ -74,6 +74,7 @@ def show():
 
 
 @bp_index.route('/about', methods=['GET'])
+@login_required
 def about():
     logger.info("path={}, method={}".format(r.path, r.method))
     return render_template("about.html", author=author, version=version,
