@@ -1,0 +1,7 @@
+build*/**
+ChangeLog
+run/*
+dist*/**
+vars/*
+*.DS_Store
+*.retry
