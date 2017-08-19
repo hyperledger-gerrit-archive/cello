@@ -1,6 +1,8 @@
-/**
- * Created by yuehaitao on 2017/8/18.
+/** Copyright IBM Corp, All Rights Reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
  */
+
 Vue.prototype.unixMoment = function (time) {
     return moment.unix(time).format("YYYY/MM/DD HH:mm:ss")
 };

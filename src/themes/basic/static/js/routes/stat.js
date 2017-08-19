@@ -1,6 +1,8 @@
-/**
- * Created by yuehaitao on 2017/8/18.
+/** Copyright IBM Corp, All Rights Reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
  */
+
 Vue.component('chart', VueECharts)
 function getCluster() {
     return axios.get('/api/stat', {params: {res: 'cluster'}});
