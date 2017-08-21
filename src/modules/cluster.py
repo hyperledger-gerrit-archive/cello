@@ -684,6 +684,8 @@ class ClusterHandler(object):
             rest_api = cluster["service_url"]['rest'] + "/network/peers"
             if not rest_api.startswith('http'):
                 rest_api = 'http://' + rest_api
+            logger.debug("rest_api={}".format(rest_api))
+            logger.debug("---In Network type Fabric V 0.6---")
             try:
                 r = requests.get(rest_api, timeout=timeout)
             except Exception as e:
@@ -692,6 +694,7 @@ class ClusterHandler(object):
                 return True
 
             peers = r.json().get("peers")
+            logger.debug("peers from rest_api: {}".format(peers))
 
             if len(peers) == cluster["size"]:
                 self.db_update_one({"id": cluster_id},
@@ -704,9 +707,59 @@ class ClusterHandler(object):
                                    {"$set": {"health": "FAIL"}})
                 return False
         elif cluster.get('network_type') == NETWORK_TYPE_FABRIC_V1:
-            # TODO: check fabric 1.0 network health status
-            return True
-        return True
+            rest_api = cluster["worker_api"]
+            if not rest_api.startswith('http'):
+                segs = rest_api.split(":")  # tcp://x.x.x.x:2375
+                if len(segs) != 3:
+                    rest_api = 'http://' + rest_api
+                if len(segs) == 3:
+                    rest_api = 'http:' + segs[1] + ':' + segs[2] + \
+                               '/containers/json'
+            logger.debug("rest_api = {}".format(rest_api))
+            try:
+                r = requests.get(rest_api, timeout=timeout)
+            except Exception as e:
+                logger.error("Error to refresh health of cluster {}: {}".
+                             format(cluster_id, e))
+                return True
+            data = r.json()
+            # name = list(map(lambda x: x.split('_'), d['Names'][0]))
+            peer_ports_up = 0
+            orderer_up = 0
+            for d in data:
+                name = d['Names'][0].split('_')
+                if name[1].startswith('peer'):
+                    ports = list(port['PrivatePort'] for port in d['Ports'])
+                    # logger.debug("peers from rest_api: {}".format(name[1]))
+                    # logger.debug("ports from rest_api: {}".
+                    #     format(ports))
+                    # logger.debug("Test1! {}".
+                    #     format(set(cluster['mapped_ports'].values())))
+                    # logger.debug("Test2! {}".format(set(ports)))
+                    if set(ports) & set(cluster['mapped_ports'].values()) ==\
+                            set(ports):
+                        peer_ports_up += 1
+                        logger.debug("Ports are up for container: {}- {}".
+                                     format(d['Names'][0], ports))
+                if name[1].startswith('orderer'):
+                    orderer_up += 1
+                    logger.debug("Orderers: {}".
+                                 format(d['Names'][0]))
+                logger.debug("Number of Orderers up: {}".
+                             format(orderer_up))
+            if (cluster["size"] == peer_ports_up and
+                    ((cluster["size"] / 4) == orderer_up)):
+                logger.debug("health check of cluster id={} is OK".format(
+                    cluster_id))
+                self.db_update_one({"id": cluster_id},
+                                   {"$set": {"health": "OK"}})
+                return True
+            else:
+                logger.debug("health check of cluster id={} FAIL".
+                             format(cluster_id))
+                self.db_update_one({"id": cluster_id},
+                                   {"$set": {"health": "FAIL"}})
+                return False
 
     def db_update_one(self, filter, operations, after=True, col="active"):
         """
