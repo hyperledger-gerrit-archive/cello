@@ -11,7 +11,7 @@ from flask_login import logout_user
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from modules.user import ListUser, CreateUser, UpdateUser, \
-    DeleteUser, Register, Login, UserInfo
+    DeleteUser, Register, Login, UserInfo, UserProfile
 
 
 bp_user_api = Blueprint('bp_user_api', __name__,
@@ -37,3 +37,4 @@ user_api.add_resource(CreateUser, '/create')
 user_api.add_resource(UpdateUser, '/update/<string:user_id>')
 user_api.add_resource(DeleteUser, '/delete/<string:user_id>')
 user_api.add_resource(UserInfo, '/account/<string:user_id>')
+user_api.add_resource(UserProfile, '/profile/<string:user_id>')
