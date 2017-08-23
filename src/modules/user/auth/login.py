@@ -43,7 +43,7 @@ class Login(Resource):
 
         user_obj = User()
         try:
-            user = user_obj.get_by_username_w_password(username)
+            user = user_obj.get_by_username(username)
             if bcrypt.checkpw(password.encode('utf8'),
                               bytes(user.password.encode())):
                 login_user(user)
