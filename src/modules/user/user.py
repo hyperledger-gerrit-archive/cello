@@ -4,7 +4,7 @@ import logging
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from flask_login import UserMixin, AnonymousUserMixin
 from modules.models import User as UserModel
-from modules.models import LoginHistory
+from modules.models import LoginHistory, Profile
 from common import log_handler, LOG_LEVEL
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,8 @@ class User(UserMixin):
         self.isAdmin = is_admin
         self.role = role
         self.id = None
+        self.profile = None
+        self.dbUser = None
         self.balance = balance
 
     def is_active(self):
@@ -41,6 +43,7 @@ class User(UserMixin):
                              isAdmin=self.isAdmin)
         new_user.save()
         self.id = str(new_user.id)
+        self.dbUser = new_user
         return self.id
 
     def get_by_username(self, username):
@@ -51,6 +54,7 @@ class User(UserMixin):
             self.active = dbUser.active
             self.id = dbUser.id
             self.balance = dbUser.balance
+            self.dbUser = dbUser
             return self
         else:
             return None
@@ -66,6 +70,7 @@ class User(UserMixin):
                 self.id = dbUser.id
                 self.isAdmin = dbUser.isAdmin
                 self.balance = dbUser.balance
+                self.dbUser = dbUser
                 login_history = LoginHistory(user=dbUser)
                 login_history.save()
                 return self
@@ -85,8 +90,28 @@ class User(UserMixin):
             self.active = dbUser.active
             self.id = dbUser.id
             self.balance = dbUser.balance
+            self.profile = dbUser.profile
+            self.dbUser = dbUser
 
             return self
+
+    def update_profile(self, name, email, bio, url, location):
+        if self.profile:
+            self.profile.update(set__name=name,
+                                set__email=email,
+                                set__bio=bio,
+                                set__url=url,
+                                set__location=location,
+                                upsert=True)
+        else:
+            profile = Profile(name=name,
+                              email=email,
+                              bio=bio,
+                              url=url,
+                              location=location)
+            profile.save()
+            self.dbUser.profile = profile
+            self.dbUser.save()
 
 
 class Anonymous(AnonymousUserMixin):
