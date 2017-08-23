@@ -12,14 +12,24 @@ OPERATOR = 1
 COMMON_USER = 2
 
 
+class Profile(Document):
+    name = StringField(default="")
+    email = StringField(default="")
+    bio = StringField(default="")
+    organization = StringField(default="")
+    url = StringField(default="")
+    location = StringField(default="")
+
+
 class User(Document):
     username = StringField(unique=True)
-    password = StringField(default=True)
+    password = StringField(default="")
     active = BooleanField(default=True)
     isAdmin = BooleanField(default=False)
     role = IntField(default=COMMON_USER)
     timestamp = DateTimeField(default=datetime.datetime.now)
     balance = IntField(default=0)
+    profile = ReferenceField(Profile)
 
 
 class LoginHistory(Document):
