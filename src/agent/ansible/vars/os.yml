@@ -14,7 +14,7 @@ cluster: {
   target_os: "ubuntu",
   image_name: "Ubuntu 16.04",
   region_name: "",
-  ssh_user: "ubuntu",
+  ssh_user: "ibmadmin",
   availability_zone: "compute_enterprise",
   validate_certs: True,
   private_net_name: "demonet",
