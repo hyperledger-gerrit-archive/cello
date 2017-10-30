@@ -5,6 +5,7 @@ import sys
 import os
 import logging
 import threading
+import docker
 import time
 import datetime
 import socket
@@ -110,6 +111,57 @@ def create_vm(connection, params):
     t.start()
 
 
+def download_images(worker_api):
+    client = docker.DockerClient(base_url=worker_api)
+    try:
+        pull_fabric_images(client)
+        pull_fabric_base_images(client)
+        return True
+
+    except Exception as e:
+        logger.error('{}'.format(e))
+        return False
+
+
+def pull_fabric_images(docker_client):
+    for image in utils.FABRIC_IMAGES:
+        pull_image(docker_client, image, utils.ARCH, utils.VERSION)
+        tag_image(docker_client, image, utils.ARCH, utils.VERSION)
+
+
+def pull_fabric_base_images(docker_client):
+    for image in utils.FABRIC_BASE_IMAGES:
+        pull_image(docker_client, image, utils.ARCH, utils.BASEIMAGE_RELEASE)
+        tag_image(docker_client, image, utils.ARCH, utils.BASEIMAGE_RELEASE)
+
+
+def pull_image(client, image, arch, version):
+    try:
+        image_to_be_pull = utils.FABRIC_IMAGE_TAG.format(image)
+        name = utils.FABRIC_IMAGE_FULL.format(image, arch, version)
+        logger.info("pulling image: {}".format(name))
+        client.images.pull(image_to_be_pull, tag=arch + '-' + version)
+
+    except Exception as e:
+        logger.error("Docker client error msg: {}".format(e))
+        error_msg = "Cannot pull image:{}".format(name)
+        raise Exception(error_msg)
+
+
+def tag_image(client, image, arch, version):
+    try:
+        name = utils.FABRIC_IMAGE_FULL.format(image, arch, version)
+        tag = utils.FABRIC_IMAGE_TAG.format(image)
+        image_to_be_tag = client.images.get(name)
+        logger.info("tag {} => {}".format(name, tag))
+        image_to_be_tag.tag(tag)
+
+    except Exception as e:
+        logger.error("Docker client error msg: {}".format(e))
+        error_msg = "Cannot tag image:{}".format(name)
+        raise Exception(error_msg)
+
+
 def setup_vm(connection, params):
     """
     setup  a new vritualmachine.
@@ -205,10 +257,12 @@ def setup_vm(connection, params):
         host.update({utils.VMUUID: uuid})
         if check_isport_open(vmip, utils.WORKER_API_PORT,
                              utils.DEFAULT_TIMEOUT):
-            if setup_container_host(utils.WORKER_TYPE_DOCKER,
-                                    workerapi):
+            if (download_images(workerapi) and
+               setup_container_host(utils.WORKER_TYPE_DOCKER, workerapi)):
+
                 host['status'] = 'active'
                 logger.info(host)
+
             else:
                 host["status"] = 'error'
                 logger.error("Failed to setup container host")
@@ -216,8 +270,10 @@ def setup_vm(connection, params):
             host["status"] = 'error'
             logger.error("Failed to ping docker daemon:{}:{}"
                          .format(vmip, "2375"))
+
         col.find_one_and_update({utils.VMNAME: vmname}, {"$set": host})
         # Should be safe to delete vm though VsphereHost layer.
+
     except Exception as e:
         logger.error(e)
         col.delete_one({utils.VMNAME: vmname})
