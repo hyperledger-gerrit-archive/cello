@@ -164,7 +164,7 @@ initial-env: ##@Configuration Initial Configuration for dashboard
 	$(SED) 's/\(DEV=\).*/\1${DEV}/' .env
 	$(SED) 's/\(ROOT_PATH=\).*/\1${ROOT_PATH_REPLACE}/' .env
 
-start: ##@Service Start service
+start: docker ##@Service Start service
 	@$(MAKE) $(START_OPTIONS)
 	echo "Start all services..."
 	docker-compose up -d --no-recreate
