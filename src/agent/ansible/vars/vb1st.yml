@@ -44,5 +44,7 @@ fabric: {
   },
 
   baseimage_tag: "1.0.5",
-  ca: { tag: "1.0.5", admin: "admin", adminpw: "adminpw" }
+  # This tag defines image tag for containers such as kafka, zookeeper and couchdb
+  helper_tag: "",
+  ca: { admin: "admin", adminpw: "adminpw" }
 }
