@@ -4,6 +4,10 @@
 import login from './login'
 import register from './register'
 import profile from './profile'
+import sendResetEmail from './send_reset_email'
+import chain from './chain'
+import fabric from './fabric'
+import chainCode from './chain_code'
 
 const express = require("express");
 const multer  = require("multer");
@@ -20,140 +24,11 @@ const router = express.Router();
 router.use("/login", login)
 router.use("/register", register)
 router.use("/profile", profile)
+router.use("/send-reset-email", sendResetEmail)
+router.use("/chain", chain)
+router.use("/fabric", fabric)
+router.use("/chain-code", chainCode)
 
-router.get("/:apikey/chain/list", function(req, res) {
-    var chain = new Chain(req.params.apikey);
-    chain.list(req.query.page).then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.post("/:apikey/chain/apply", function(req, res) {
-    var chain = new Chain(req.params.apikey);
-    chain.apply(req.body.name,
-                req.body.description,
-                req.body.plugin,
-                req.body.mode,
-                req.body.size)
-    .then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.post("/:apikey/chain/:id/edit", function(req, res) {
-    var chain = new Chain(req.params.apikey);
-    chain.edit(req.params.id, req.body.name, req.body.description).then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.post("/:apikey/chain/:id/release", function(req, res) {
-    var chain = new Chain(req.params.apikey);
-    chain.release(req.params.id).then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.get("/chain/:id/operate", function(req, res) {
-    var chain = new Chain();
-    chain.operate(req.params.id, req.query.action).then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.get("/chain/:id/topology", function(req, res) {
-    var topology = {};
-    var chain = new Chain();
-    chain.topologyNodes(req.params.id).then(function(result) {
-        topology["nodes"] = result["geoData"];
-        return chain.topologyLinks(req.params.id);
-    }).then(function(result) {
-        topology["links"] = result["geoData"];
-        res.json(Object.assign(topology, { success: true }));
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.get("/chain/:id/topology/latency", function(req, res) {
-    var chain = new Chain();
-    chain.topologyLatency(req.params.id).then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.get("/chain/:id/log/nodes", function(req, res) {
-    var chain = new Chain();
-    chain.logNodes(req.params.id).then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.get("/chain/:id/log", function(req, res) {
-    var chain = new Chain();
-    chain.log(req.params.id,
-              req.query.type,
-              req.query.node,
-              req.query.size,
-              req.query.time)
-    .then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.get("/chain/:id/blocks", function(req, res) {
-    var chain = new Chain();
-    chain.blocks(req.params.id).then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.get("/chain/:chainId/block/:blockId", function(req, res) {
-    var chain = new Chain();
-    chain.block(req.params.chainId, req.params.blockId).then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.get("/chain/:id/chaincode/list", function(req, res) {
-    var chaincode = new Chaincode(req.params.id);
-    chaincode.list(req.query.page).then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.post("/chain/:id/chaincode/invoke", function(req, res) {
-    var chaincode = new Chaincode(req.params.id);
-    chaincode.invoke(req.body.id,
-                     req.body.func,
-                     req.body.args)
-    .then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
-router.post("/chain/:id/chaincode/query", function(req, res) {
-    var chaincode = new Chaincode(req.params.id);
-    chaincode.query(req.body.id,
-                    req.body.func,
-                    req.body.args)
-    .then(function(result) {
-        res.json(result);
-    }).catch(function(err) {
-        res.json(err);
-    });
-});
 router.post("/:apikey/contract/upload", function(req, res) {
     mongoClient.getGridFS().then(function(gfs) {
         return new Promise(function(resolve, reject) {
