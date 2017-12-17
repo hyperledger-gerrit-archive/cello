@@ -1,0 +1,8 @@
+THEME?=basic
+STATIC_FOLDER?=themes\/${THEME}\/static
+TEMPLATE_FOLDER?=themes\/${THEME}\/templates
+NPM_REGISTRY?=https://registry.npmjs.org
+DEV?=True
+ENABLE_EMAIL_ACTIVE?=False
+
+NPM_REGISTRY_REPLACE=$(subst $(SLASH),$(REPLACE_SLASH),$(NPM_REGISTRY))
