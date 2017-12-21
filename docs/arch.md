@@ -9,6 +9,18 @@ The architecture will follow the following principles:
 * Fault-resilience: Means the service should be tolerant for fault, such as database crash.
 * Scalability: Try best to distribute the services, to mitigate centralized bottle neck.
 
+## Cello Baseimage
+![BaseImage](imgs/cello_baseimage.png)
+
+The purpose of this baseimage is to act as a bridge between a raw ubuntu/xenial configuration and the customizations
+required for supporting a Hyperledger Cello environment. The build process is generally expensive so it is fairly
+inefficient to JIT assemble these components on demand. Hence bundled into baseimage and subsequently cached on
+the public repositories, so they can be simply consumed without requiring a local build cycle.
+
+### Usuage
+* "make docker" will build the docker images and commit it to your local environment; e.g. "hyperledger/cello-baseimage".
+The docker image is also tagged with architecture and release details.
+
 ## Functional Layers
 
 Following the decouple design, there are 3 layers in Cello.
@@ -43,4 +55,4 @@ The reasons of choosing it include:
 * Flexible for extending
 * Stable in code
 
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International Licenses</a>.
