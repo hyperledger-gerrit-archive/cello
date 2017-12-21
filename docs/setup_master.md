@@ -26,6 +26,19 @@ You may check `git` and `make` are installed to clone the code.
 $ sudo aptitude install git make -y
 $ git clone http://gerrit.hyperledger.org/r/cello && cd cello
 ```
+
+## Cello Baseimage
+![BaseImage](imgs/cello_baseimage.png)
+
+The purpose of this baseimage is to act as a bridge between a raw ubuntu/xenial configuration and the customizations
+required for supporting a Hyperledger Cello environment. The build process is generally expensive so it is fairly
+inefficient to JIT assemble these components on demand. Hence bundled into baseimage and subsequently cached on
+the public repositories, so they can be simply consumed without requiring a local build cycle.
+
+### Usuage
+* "make docker" will build the docker images and commit it to your local environment; e.g. "hyperledger/cello-baseimage".
+The docker image is also tagged with architecture and release details.
+
 ### Run Setup
 
 For the first time running, please setup the master node with the [setup.sh](https://github.com/hyperledger/cello/blob/master/scripts/master_node/setup.sh).
