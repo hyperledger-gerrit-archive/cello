@@ -112,8 +112,8 @@ install: $(patsubst %,build/docker/%/.push,$(DOCKER_IMAGES))
 
 check: docker ##@Code Check code format
 	tox
-	@$(MAKE) test-case
-	make start && sleep 10 && make stop
+#	@$(MAKE) test-case
+#	make start && sleep 10 && make stop
 
 test-case: ##@Code Run test case for flask server
 	@$(MAKE) -C test/ all
