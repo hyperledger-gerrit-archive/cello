@@ -36,19 +36,16 @@ HOST_STATUS_PENDING = 'pending'
 CLUSTER_PORT_STEP = 100
 
 PEER_SERVICE_PORTS = {
-    'rest': 7050,  # this is the reference starter for cluster port step
-    'grpc': 7051,
-    'cli': 7052,
-    'event': 7053,
+    'peer{}_org{}_grpc': 7051,
+    'peer{}_org{}_event': 7053,
 }
 
 CA_SERVICE_PORTS = {
-    'ecap': 7054,
-    'ecaa': 7055,
-    'tcap': 7056,
-    'tcaa': 7057,
-    'tlscap': 7058,
-    'tlscaa': 7059,
+    'ca_org{}_ecap': 7054,
+}
+
+ORDERER_SERVICE_PORTS = {
+    'orderer': 7050
 }
 
 EXPLORER_PORT = {
