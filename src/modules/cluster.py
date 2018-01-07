@@ -145,11 +145,11 @@ class ClusterHandler(object):
         worker_api = worker.worker_api
         logger.debug("worker_api={}".format(worker_api))
 
-        ca_num = 1
+        ca_num = 2 if size > 1 else 1
         request_port_num = \
             len(ORDERER_SERVICE_PORTS.items()) + \
             len(ca_service_ports.items()) * ca_num + \
-            size * (len(peer_service_ports.items()))
+            size * (len(peer_service_ports.items())) + 1
         logger.debug("request port number {}".format(request_port_num))
         ports = []
 
@@ -161,8 +161,8 @@ class ClusterHandler(object):
 
         logger.debug("ports {}".format(ports))
         peers_ports, ca_mapped_ports, orderer_service_ports,\
-            explorer_mapped_port, mapped_ports = \
-            {}, {}, {}, {}, {}
+            mapped_ports = \
+            {}, {}, {}, {}
         port_pos = 0
 
         if size > 1:
@@ -181,24 +181,23 @@ class ClusterHandler(object):
                     peers_ports[k.format(peer_num, org_num)] = ports[port_pos]
                     logger.debug("port_pos {}".format(port_pos))
                     port_pos += 1
-        # for org_num in org_num_list:
-        for k, v in ca_service_ports.items():
-            ca_mapped_ports[k.format(1)] = ports[port_pos]
-            logger.debug("port_pos {}".format(port_pos))
-            port_pos += 1
+        for org_num in org_num_list:
+            for k, v in ca_service_ports.items():
+                ca_mapped_ports[k.format(org_num)] = ports[port_pos]
+                port_pos += 1
         for k, v in ORDERER_SERVICE_PORTS.items():
             orderer_service_ports[k] = ports[port_pos]
             logger.debug("port_pos {}".format(port_pos))
             port_pos += 1
 
-        for k, v in EXPLORER_PORT.items():
-            explorer_mapped_port[k] = \
-                v - PEER_SERVICE_PORTS['rest'] + start_port
+        # for k, v in EXPLORER_PORT.items():
+        #     explorer_mapped_port[k] = \
+        #         v - PEER_SERVICE_PORTS['rest'] + start_port
 
         mapped_ports.update(peers_ports)
         mapped_ports.update(ca_mapped_ports)
         mapped_ports.update(orderer_service_ports)
-        mapped_ports.update(explorer_mapped_port)
+        # mapped_ports.update(explorer_mapped_port)
         env_mapped_ports = dict(((k + '_port').upper(),
                                  str(v)) for (k, v) in mapped_ports.items())
 
@@ -212,6 +211,7 @@ class ClusterHandler(object):
             'network_type': network_type,  # e.g., fabric-1.0
             'env': env_mapped_ports
         }
+        logger.debug("mapped ports {}".format(mapped_ports))
         if network_type == NETWORK_TYPE_FABRIC_V1:  # TODO: fabric v1.0
             net.update({
                 'mapped_ports': mapped_ports,
@@ -403,7 +403,8 @@ class ClusterHandler(object):
         logger.debug("Try find available cluster for " + user_id)
         cluster = ClusterModel.\
             objects(user_id=SYS_USER,
-                    network_type__icontains=condition.get("apply_type"),
+                    network_type__icontains=condition.get("apply_type",
+                                                          "fabric"),
                     size=condition.get("size", 0),
                     health="OK").first()
         if cluster:
