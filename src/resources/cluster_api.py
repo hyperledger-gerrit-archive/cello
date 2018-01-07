@@ -301,6 +301,7 @@ def cluster_list():
 
     Return objs of the clusters.
     """
+    logger.info("will get clusters")
     request_debug(r, logger)
     f = {}
     if r.method == 'GET':

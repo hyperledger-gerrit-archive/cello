@@ -62,11 +62,13 @@ chain.prototype = {
     list: function(page) {
         const username = this.username
         const userId = this.apikey
+        logger.debug(`request list api ${this.RESTfulURL + "clusters?user_id=" + this.apikey}`)
         return new Promise(function(resolve, reject) {
             rp({
                 uri: this.RESTfulURL + "clusters?user_id=" + this.apikey,
                 json: true
             }).then(function(response) {
+                logger.debug(response)
               if (response.status === "OK") {
                 let chains = [];
                 let clusters = response.data;
