@@ -382,19 +382,19 @@ class HostHandler(object):
         if len(clusters) <= 0:
             return True
 
-        host = self.db_set_by_id(id, autofill=False)
+        host = self.db_set_by_id(id, **{"autofill": False})
         schedulable_status = host.schedulable
         if schedulable_status:
-            host = self.db_set_by_id(id, schedulable=False)
+            host = self.db_set_by_id(id, **{"schedulable": False})
 
         for cluster_item in clusters:
             cid = str(cluster_item.id)
-            t = Thread(target=cluster_item.cluster_handler.delete, args=(cid,))
+            t = Thread(target=cluster.cluster_handler.delete, args=(cid,))
             t.start()
             time.sleep(0.2)
 
         if schedulable_status:
-            self.db_set_by_id(id, schedulable=schedulable_status)
+            self.db_set_by_id(id, **{"schedulable": schedulable_status})
 
         return True
 
@@ -491,6 +491,7 @@ class HostHandler(object):
         :param kwargs: kv pairs
         :return: The updated host json dict
         """
+        logger.debug("will update host {}".format(id))
         kwargs = dict(('set__' + k, v)
                       for (k, v) in locals().get("kwargs", {}).items())
         HostModel.objects(id=id).update(
