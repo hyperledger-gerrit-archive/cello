@@ -1,0 +1,15 @@
+FROM node:9.2
+MAINTAINER haitao yue "hightall@me.com"
+RUN npm install -g requirejs
+COPY user-dashboard/package.json /
+RUN cd / && yarn install -g --verbose
+ENV PATH ${PATH}:/node_modules/.bin
+RUN mkdir -p /usr/app/src
+WORKDIR /usr/app/src
+ENV FABRIC_VERSION 1.0.5
+RUN cd /tmp && wget -c https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/linux-amd64-${FABRIC_VERSION}/hyperledger-fabric-linux-amd64-${FABRIC_VERSION}.tar.gz \
+	&& tar -zxvf hyperledger-fabric-linux-amd64-${FABRIC_VERSION}.tar.gz && mv bin/configtxgen /usr/local/bin/configtxgen
+COPY user-dashboard/fabric/fabric /etc/hyperledger/fabric
+ENV FABRIC_CFG_PATH /etc/hyperledger/fabric
+EXPOSE 8080
+CMD ["npm", "start"]
