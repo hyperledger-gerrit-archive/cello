@@ -119,11 +119,8 @@ services:
       - USERNAME=admin
       - PASSWORD=pass
 
- #TODO: need to follow other images to put at dockerhub
   user-dashboard:
-    build:
-      context: user-dashboard
-    image: hyperledger/cello-user-dashboard
+    image: hyperledger/cello-baas
     container_name: user-dashboard
     links:
       - mongo:dashboard_mongo

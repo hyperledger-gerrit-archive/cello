@@ -48,7 +48,7 @@ else
 endif
 
 # Docker images needed to run cello services
-DOCKER_IMAGES = baseimage mongo nginx
+DOCKER_IMAGES = baseimage mongo nginx baas
 DUMMY = .$(IMG_TAG)
 
 ifeq ($(DOCKER_BASE), )
@@ -99,6 +99,7 @@ all: check
 build/docker/baseimage/$(DUMMY): build/docker/baseimage/$(DUMMY)
 build/docker/nginx/$(DUMMY): build/docker/nginx/$(DUMMY)
 build/docker/mongo/$(DUMMY): build/docker/mongo/$(DUMMY)
+build/docker/baas/$(DUMMY): build/docker/baas/$(DUMMY)
 
 build/docker/%/$(DUMMY): ##@Build an image locally
 	$(eval TARGET = ${patsubst build/docker/%/$(DUMMY),%,${@}})
@@ -113,8 +114,8 @@ build/docker/%/$(DUMMY): ##@Build an image locally
 	docker build -f $(@D)/Dockerfile \
 		-t $(IMG_NAME) \
 		-t $(IMG_NAME):$(IMG_TAG) \
-		. ; \
-	@touch $@
+		. ;
+	@touch $@ ;
 
 build/docker/%/.push: build/docker/%/$(DUMMY)
 	@docker login \
