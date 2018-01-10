@@ -110,7 +110,7 @@ build/docker/%/$(DUMMY):
 		| sed -e 's|_NS_|$(DOCKER_NS)|g' \
 		| sed -e 's|_TAG_|$(IMG_TAG)|g' \
 		> $(@D)/Dockerfile
-	if [ "$$(docker images -q $(IMG_NAME) 2> /dev/null)" == "" ]; then \
+	if [ "$$(docker images -q $(IMG_NAME) 2> /dev/null)" = "" ]; then \
 		docker build -f $(@D)/Dockerfile \
 			-t $(IMG_NAME) \
 			-t $(IMG_NAME):$(IMG_TAG) \
