@@ -45,7 +45,7 @@ def chain_check_health(chain_id, retries=3, period=5):
     logger.debug("Chain {}/{}: checking health".format(chain_name, chain_id))
 
     # we should never process in-processing chains unless deleting one
-    if chain_user_id.startswith(SYS_USER):
+    if chain_user_id.startswith(SYS_USER) and chain_user_id != SYS_USER:
         if chain_user_id.startswith(SYS_DELETER):  # in system processing, TBD
             for i in range(retries):
                 time.sleep(period)
