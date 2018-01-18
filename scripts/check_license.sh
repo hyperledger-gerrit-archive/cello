@@ -19,6 +19,7 @@ if [[ -z "$CHECK" ]]; then
   | grep -v .md$ | grep -v ^vendor/ | grep -v ^build/ | grep -v .pb.go$ | grep -v .txt | grep -v .env | sort -u)
 fi
 echo "Checking committed files for SPDX-License-Identifier headers ..."
+echo $CHECK
 missing=`echo $CHECK | xargs grep -L "SPDX-License-Identifier"`
 if [ -z "$missing" ]; then
    echo "All files have SPDX-License-Identifier headers"
