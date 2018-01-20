@@ -1,5 +1,31 @@
 # Release Notes
 
+## [v0.8](https://github.com/hyperledger/cello/releases/tag/v0.8) January 20, 2018
+
+### Add new features:
+
+* Blockchain-Explorer support;
+* Enable user dashboard, can apply chain, query block/transaction, upload/invoke/query chain code;
+* Support v3 docker compose format;
+* Support fabric 1.0.5;
+* Support fabric with kafaka mode;
+
+### Improvement:
+
+* Use mongoengine instead of mongodb library for admin dashboard.
+
+### Known Vulnerabilities
+none
+
+### Resolved Vulnerabilities
+none
+
+### Known Issues & Workarounds
+
+* Health check should ignore blockchain explorer port.
+* Cluster's user_id should be empty when the chain is created.
+* User dashboard not support debug/product mode.
+
 ## [v0.7](https://github.com/hyperledger/cello/releases/tag/v0.7) October 20, 2017
 
 ### Add new features:
