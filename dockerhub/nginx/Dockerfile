@@ -1,4 +1,4 @@
-FROM hyperledger/cello-baseimage:x86_64-latest
+FROM hyperledger/cello-baseimage:x86_64-0.8.0-alpha
 
 COPY nginx/ /tmp/
 
