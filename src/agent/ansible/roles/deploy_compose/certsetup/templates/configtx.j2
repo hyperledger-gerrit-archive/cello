@@ -38,6 +38,10 @@ Orderer: &OrdererDefaults
 {% for org in ordererorgs %}
     - *{{ org }}
 {% endfor %}
+{% if "1.1.0" in "fabric.baseimage_tag||{{ project_version }}" %}
+  Capabilities:
+    <<: *OrdererCapabilities
+{% endif %}
 
 Application: &ApplicationDefaults
   Organizations:
@@ -50,14 +54,31 @@ Profiles:
     Consortium: FabricConsortium
     Application:
       <<: *ApplicationDefaults
-
+{% if "1.1.0" in "fabric.baseimage_tag||{{ project_version }}" %}
+    Capabilities:
+      <<: *ApplicationCapabilities
+{% endif %}
   OrdererGenesis:
     Orderer:
       <<: *OrdererDefaults
-
+{% if "1.1.0" in "fabric.baseimage_tag||{{ project_version }}" %}
+    Capabilities:
+      <<: *ChannelCapabilities
+{% endif %}
     Consortiums:
       FabricConsortium:
         Organizations:
 {%   for org in peerorgs %}
           - *{{ org }}
 {%   endfor %}
+{% if "1.1.0" in "fabric.baseimage_tag||{{ project_version }}" %}
+Capabilities:
+  Global: &ChannelCapabilities
+    V1_1: true
+
+  Orderer: &OrdererCapabilities
+    V1_1: true
+
+  Application: &ApplicationCapabilities
+    V1_1: true
+{% endif %}
