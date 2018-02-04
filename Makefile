@@ -7,7 +7,7 @@
 # This makefile defines the following targets
 #
 #   - all (default):  Builds all targets and runs all tests/checks
-#   - checks:         Setup as master node, and runs all tests/checks, will be triggered by CI
+#   - check:         Setup as master node, and runs all tests/checks, will be triggered by CI
 #   - clean:          Cleans the build area
 #   - doc:            Start a local web service to explore the documentation
 #   - docker[-clean]: Build/clean docker images locally
@@ -133,8 +133,8 @@ license:
 install: $(patsubst %,build/docker/%/.push,$(DOCKER_IMAGES))
 
 check: setup-master ##@Code Check code format
+	@$(MAKE) license
 	tox
-#	@$(MAKE) license
 	@$(MAKE) test-case
 	make start && sleep 10 && make stop
 
