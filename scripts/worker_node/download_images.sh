@@ -65,7 +65,7 @@ IMG_TAG=1.0.4
 echo_b "Downloading and retag images for kafka/zookeeper separately, as they are still v1.0.4"
 for IMG in kafka zookeeper; do
 	HLF_IMG=hyperledger/fabric-${IMG}
-	if [ -z "$(docker images -q ${HLF_IMG}:${ARCH}-${HLF_VERSION} 2> /dev/null)" ]; then  # not exist
+	if [ -z "$(docker images -q ${HLF_IMG}:${HLF_VERSION} 2> /dev/null)" ]; then  # not exist
 		docker pull ${HLF_IMG}:$ARCH-$IMG_TAG
 		docker tag ${HLF_IMG}:$ARCH-$IMG_TAG ${HLF_IMG}:${HLF_VERSION}
 	else
