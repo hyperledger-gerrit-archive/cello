@@ -15,9 +15,12 @@ cluster: {
   availability_zone: "", #TODO  Dynamic fetch based on region
   security_group: "Fabric",
 
+  subnet_id: "subnet-e66b2fab",
+  vpc_id: "vpc-c3659dab",
+  subnet_id: "", #Optional, if unset will use the first subnet it finds
+  vpc_id: "", #Optional, if unset will use the default VPC
   target_os: "ubuntu",
   image_name: "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-*",
-  image_id: "ami-d15a75c7",
   flavor_name: "t2.medium",  # "m2.medium" is big enough for Fabric
   ssh_user: "ubuntu",
   validate_certs: True,
