@@ -37,7 +37,8 @@ echo_b "Checking local artifacts path ${ARTIFACTS_DIR}..."
 	&& sudo mkdir -p ${ARTIFACTS_DIR} \
 	&& sudo chown -R ${USER}:${USERGROUP} ${ARTIFACTS_DIR}
 
-cp -r ../../src/agent/docker/_compose_files/fabric-1.0 ${ARTIFACTS_DIR} \
+echo_b "Mount NFS Server ${MASTER_NODE_IP}"
+mount -t nfs -o vers=4,loud ${MASTER_NODE_IP}:/ /opt/cello
 
 echo_b "Setup ip forward rules"
 sudo sysctl -w net.ipv4.ip_forward=1

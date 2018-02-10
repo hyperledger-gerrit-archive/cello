@@ -63,6 +63,7 @@ REPLACE_SLASH:=\/
 -include .makerc/email
 -include .makerc/admin-dashboard
 -include .makerc/user-dashboard
+-include .makerc/node
 
 export ROOT_PATH = ${PWD}
 ROOT_PATH_REPLACE=$(subst $(SLASH),$(REPLACE_SLASH),$(ROOT_PATH))
