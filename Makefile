@@ -7,11 +7,12 @@
 # This makefile defines the following targets
 #
 #   - all (default):  Builds all targets and runs all tests/checks
-#   - check:         Setup as master node, and runs all tests/checks, will be triggered by CI
+#   - check:          Setup as master node, and runs all tests/checks, will be triggered by CI
 #   - clean:          Cleans the build area
 #   - doc:            Start a local web service to explore the documentation
 #   - docker[-clean]: Build/clean docker images locally
-#	  - license:		  checks sourrce files for Apache license header
+#   - dockerhub:      Build using dockerhub materials, to verify them
+#	  - license:		    Checks sourrce files for Apache license header
 #   - help:           Output the help instructions for each command
 #   - log:            Check the recent log output of all services
 #   - restart:        Stop the cello service and then start
@@ -105,7 +106,7 @@ build/docker/%/$(DUMMY): ##@Build an image locally
 	$(eval IMG_NAME = $(BASENAME)-$(TARGET))
 	@mkdir -p $(@D)
 	@echo "Building docker $(TARGET)"
-	@cat config/$(TARGET)/Dockerfile.in \
+	@cat docker/$(TARGET)/Dockerfile.in \
 		| sed -e 's|_DOCKER_BASE_|$(DOCKER_BASE)|g' \
 		| sed -e 's|_NS_|$(DOCKER_NS)|g' \
 		| sed -e 's|_TAG_|$(IMG_TAG)|g' \
@@ -126,7 +127,17 @@ docker: $(patsubst %,build/docker/%/$(DUMMY),$(DOCKER_IMAGES)) ##@Generate docke
 
 docker-clean: image-clean ##@Clean all existing images
 
-.PHONY: license
+.PHONY: dockerhub
+dockerhub: ##@Building latest images with dockerhub materials, to valid them
+	for dir in baseimage engine mongo nginx operator-dashboard user-dashboard watchdog; do \
+		IMG=hyperledger/cello-$$dir; \
+		echo "Building $$IMG"; \
+		docker build \
+		-t $$IMG \
+		-t $$IMG:x86_64-latest \
+		dockerhub/latest/$$dir/ ; \
+	done;
+
 license:
 	bash scripts/check_license.sh
 
@@ -240,15 +251,15 @@ HELP_FUN = \
 	clean \        # clean up the env, remove temp files
 	changelog \    # update the changelog based on the VERSION tags
 	doc \          # start a doc server locally
-	image-clean \  # clean up all cello related images
+	docker \       # build service images locally
+	dockerhub \    # build service images with dockerhub materials, to valid them
+	docker-clean \ # clean up all cello related images
+	license \	   # check for Apache license header
 	log \          # show logs of specify service
 	logs \         # show logs of all services
+	restart \      # restart all services
 	setup-master \ # setup the master node
 	setup-worker \ # setup the worker node
 	redeploy \     # redeploy service(s)
 	start \        # start all services
-	restart \      # restart all services
 	stop \         # stop all services
-	docker \       # create docker image
-	license \	   # check for Apache license header
-
