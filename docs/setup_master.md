@@ -44,9 +44,27 @@ Make sure there is no error during the setup. Otherwise, please check the log ms
 #### Start/Stop/Restart
 To start the whole services, please run
 
+Developer Mode:
+
 ```sh
 $ make start
 ```
+
+Production Mode:
+
+```sh
+$ DEV=False make start
+```
+
+* THEME `Theme name for operator dashboard basic/vue/react, default is basic`
+* NPM_REGISTRY `npm registry for install node packages`
+* DEV `Start service in dev/product mode, options is True/False, default is True`
+* ENABLE_EMAIL_ACTIVE `Whether register user in user-dashboard need to active manually`
+* SMTP_SERVER `smtp server address for send active email to user`
+* SMTP_PORT `smtp server port`
+* SMTP_AUTH_USERNAME `Username for authenticate of smtp server`
+* SMTP_AUTH_PASSWORD `Password for authenticate of smtp server`
+* FROM_EMAIL `Email address display to user`
 
 To stop or restart the whole services, run `make stop` or `make restart`.
 
