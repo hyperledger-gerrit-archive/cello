@@ -1,0 +1,33 @@
+{
+  "name": "{{ item }}",
+  "type": "hlfv1",
+  "ca": {
+{% for ca in cas|selectattr('org', 'equalto', item)|list %}      
+    "url": "https://{{ ca.name }}:7054",
+    "name": "{{ ca.name }}",
+    "cert": "{{ fabricworkdir+'/keyfiles/'+item+'/tlsca/tlsca.'+item+'-cert.pem' }}",
+    "verify": true
+{% endfor %}
+  },
+  "orderers": [
+{% for orderer in orderers|selectattr('org', 'equalto', item)|list %}
+    { "url": "grpcs://{{ orderer.name }}:7050",
+      "cert": "{{ fabricworkdir+'/keyfiles/'+item+'/orderers/'+orderer.name+'.'+item+'/tls/server.crt' }}"
+    }{{ '' if loop.last else ',' }}
+{% endfor %}
+  ],
+  "peers": [
+{% for peer in peers|selectattr('org', 'equalto', item)|list %}
+    { "requestURL": "grpcs://{{ peer.name }}:7051",
+      "eventURL": "grpcs://{{ peer.name }}:7053",
+      "cert": "{{ fabricworkdir+'/keyfiles/'+item+'/peers/'+peer.name+'.'+item+'/tls/server.crt' }}"
+    }{{ '' if loop.last else ',' }}
+{% endfor %}
+  ],
+  "channel": "firstchannel",
+  "mspID": "{{ item }}",
+  "timeout": 300,
+  "globalCert": "",
+  "maxSendSize": 20,
+  "maxRecvSize": 20
+}
