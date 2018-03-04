@@ -29,7 +29,7 @@ RESET  := $(shell tput -Txterm sgr0)
 ARCH   := $(shell uname -m)
 
 # changelog specific version tags
-PREV_VERSION=0.7
+PREV_VERSION?=0.7
 
 # Building image usage
 DOCKER_NS ?= hyperledger
