@@ -100,6 +100,12 @@
     - "peerOrganizations"
     - "ordererOrganizations"
 
+- name: Create connection profiles
+  template:
+    src: "{{ playbook_dir }}/../deploy_compose/certsetup/templates/connection.j2"
+    dest: "{{ fabricworkdir }}/keyfiles/connection.json"
+  tags: "connectionprofile"
+
 - name: Create core.yml file for every peer
   template:
     src: "{{ playbook_dir }}/../deploy_compose/certsetup/templates/core.j2"
