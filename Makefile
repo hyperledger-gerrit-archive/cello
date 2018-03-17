@@ -100,7 +100,6 @@ all: check
 
 build/docker/baseimage/$(DUMMY): build/docker/baseimage/$(DUMMY)
 build/docker/nginx/$(DUMMY): build/docker/nginx/$(DUMMY)
-build/docker/mongo/$(DUMMY): build/docker/mongo/$(DUMMY)
 
 build/docker/%/$(DUMMY): ##@Build an image locally
 	$(eval TARGET = ${patsubst build/docker/%/$(DUMMY),%,${@}})

@@ -1,11 +1,16 @@
-FROM hyperledger/cello-baseimage:x86_64-latest
+FROM alpine:3.7
 
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN addgroup mongodb && \
+    adduser -D -G mongodb -s /bin/bash -H mongodb
 
-VOLUME /data/db /data/configdb
+RUN apk upgrade --update && \
+    apk add --no-cache mongodb=3.4.10-r0 && \
+    rm /usr/bin/mongoperf
 
-RUN ln -s usr/local/bin/docker-entrypoint.sh /entrypoint.sh # backwards compat
-ENTRYPOINT ["docker-entrypoint.sh"]
+VOLUME /data/db
+
+COPY docker-entrypoint.sh /
+ENTRYPOINT [ "/docker-entrypoint.sh" ]
 
 EXPOSE 27017
 CMD ["mongod"]
