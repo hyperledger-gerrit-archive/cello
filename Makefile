@@ -51,7 +51,7 @@ else
 endif
 
 # Docker images needed to run cello services
-DOCKER_IMAGES = baseimage mongo nginx
+DOCKER_IMAGES = baseimage nginx
 DUMMY = .$(IMG_TAG)
 
 ifeq ($(DOCKER_BASE), )
@@ -100,7 +100,6 @@ all: check
 
 build/docker/baseimage/$(DUMMY): build/docker/baseimage/$(DUMMY)
 build/docker/nginx/$(DUMMY): build/docker/nginx/$(DUMMY)
-build/docker/mongo/$(DUMMY): build/docker/mongo/$(DUMMY)
 
 build/docker/%/$(DUMMY): ##@Build an image locally
 	$(eval TARGET = ${patsubst build/docker/%/$(DUMMY),%,${@}})
@@ -128,7 +127,7 @@ docker: $(patsubst %,build/docker/%/$(DUMMY),$(DOCKER_IMAGES)) ##@Generate docke
 
 docker-clean: image-clean ##@Clean all existing images
 
-DOCKERHUB_IMAGES = baseimage engine mongo nginx operator-dashboard user-dashboard watchdog
+DOCKERHUB_IMAGES = baseimage engine nginx operator-dashboard user-dashboard watchdog
 
 dockerhub: $(patsubst %,dockerhub-%,$(DOCKERHUB_IMAGES))  ##@Building latest images with dockerhub materials, to valid them
 

@@ -32,9 +32,9 @@ echo_b "Downloading the docker images for Cello services: VERSION=${VERSION} ARC
 echo_b "Check node:9.2 image."
 [ -z "$(docker images -q node:9.2 2> /dev/null)" ] && { echo "pulling node:9.2"; docker pull node:9.2; }
 
-# docker image
+docker pull mongo:3.4-jessie
 
-for IMG in baseimage engine mongo nginx operator-dashboard user-dashboard watchdog ; do
+for IMG in baseimage engine nginx operator-dashboard user-dashboard watchdog ; do
 	HLC_IMG=hyperledger/cello-${IMG}
 	#if [ -z "$(docker images -q ${HLC_IMG}:${ARCH}-${VERSION} 2> /dev/null)" ]; then  # not exist
 	echo_b "Pulling ${HLC_IMG}:${ARCH}-${VERSION} from dockerhub"
