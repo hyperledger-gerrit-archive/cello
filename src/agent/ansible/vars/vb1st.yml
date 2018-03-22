@@ -17,7 +17,7 @@ fabric: {
 
   # options are "goleveldb", "CouchDB", default is goleveldb
   peer_db: "goleveldb",
-  tls: true,
+  tls: false,
   logging_level: "ERROR",
 
   # The following section defines how the fabric network is going to be made up
