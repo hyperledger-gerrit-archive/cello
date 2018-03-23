@@ -1,0 +1,15 @@
+---
+- name: Setup few variables
+  set_fact:
+    fabricworkdir: "/opt/gopath/{{ env }}/fabric"
+    fabricpath: "/opt/gopath/{{ env }}/src/github.com/hyperledger/fabric"
+    gopath: "/opt/gopath/{{ env }}"
+    localhome: "/home/{{ fabric.ssh_user }}/.composer"
+
+- name: Make sure that working directory is clean
+  file:
+    path: "{{ localhome }}"
+    state: "absent"
+  with_items:
+    - "absent"
+

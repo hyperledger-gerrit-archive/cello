@@ -1,0 +1,66 @@
+---
+- name: Setup few variables
+  set_fact:
+    fabricworkdir: "/opt/gopath/{{ env }}/fabric"
+    fabricpath: "/opt/gopath/{{ env }}/src/github.com/hyperledger/fabric"
+    gopath: "/opt/gopath/{{ env }}"
+    localhome: "/home/{{ fabric.ssh_user }}/.composer"
+
+- name: Make sure that working directory is clean
+  file:
+    path: "{{ localhome }}"
+    state: "{{ item }}"
+  with_items:
+    - "absent"
+    - "directory"
+
+- name: Pull composer container images from the docker hub
+  command: "docker pull {{ fabric.repo.url }}{{ item }}"
+  with_items:
+    - "composer-cli:next"
+    - "composer-playground:next"
+  tags: "pullcomposerimages"
+
+- name: Create the cards
+  command: >-
+    docker run -v {{ localhome }}:/home/composer/.composer
+    -v {{ fabricworkdir }}:{{ fabricworkdir }}
+    hyperledger/composer-cli:next card create
+    -p {{ fabricworkdir }}/run/keyfiles/{{ item }}/connection.json
+    -c {{ fabricworkdir }}/run/keyfiles/{{ item }}/users/Admin@{{ item }}/msp/admincerts/Admin@{{ item }}-cert.pem
+    -k {{ fabricworkdir }}/run/keyfiles/{{ item }}/users/Admin@{{ item }}/msp/keystore/admin_private.key
+    -r PeerAdmin -r ChannelAdmin
+    -u PeerAdmin@{{ item }}
+    -f {{ fabricworkdir }}/run/keyfiles/{{ item }}/{{ item }}_firstnetwork.card
+  with_items: "{{ peerorgs }}"
+  tags: "createcards"
+
+- name: Import the cards
+  command: >-
+    docker run -v {{ localhome }}:/home/composer/.composer
+    -v {{ fabricworkdir }}:{{ fabricworkdir }}
+    hyperledger/composer-cli:next card import
+    -f {{ fabricworkdir }}/run/keyfiles/{{ item }}/{{ item }}_firstnetwork.card
+    --name PeerAdmin@{{ item }}
+  with_items: "{{ peerorgs }}"
+  tags: "importcards"
+
+- name: Runtime install
+  command: >-
+    docker run -v {{ localhome }}:/home/composer/.composer
+    -v {{ fabricworkdir }}:{{ fabricworkdir }}
+    hyperledger/composer-cli:next runtime install
+    -c PeerAdmin@{{ item }} -n trade-network
+  with_items: "{{ peerorgs }}"
+  tags: "runtimeinstall"
+
+- name: Request identity
+  command: >-
+    docker run -v {{ localhome }}:/home/composer/.composer
+    -v {{ fabricworkdir }}:{{ fabricworkdir }}
+    hyperledger/composer-cli:next identity request
+    -c PeerAdmin@{{ item }}
+    -u {{ fabric.ca.admin }} -s {{ fabric.ca.adminpw }}
+    -d /home/composer/.composer/{{ item }}Admin
+  with_items: "{{ peerorgs }}"
+  tags: "requestidentity"
