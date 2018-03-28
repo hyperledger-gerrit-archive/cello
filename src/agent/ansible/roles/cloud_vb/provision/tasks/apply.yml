@@ -8,6 +8,7 @@
   command: >-
     /usr/local/bin/VBoxManage clonevm {{ cluster.image_name }}
     --name "{{ inventory_hostname }}" --register
+    --options link --snapshot ReadyState
   when: exists.stdout == ""
   tags: "createVM"
 
