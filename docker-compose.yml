@@ -39,7 +39,8 @@ services:
 
   # cello dashboard service for network operator
   operator-dashboard:
-    image: hyperledger/cello-operator-dashboard
+    #image: hyperledger/cello-operator-dashboard
+    image: dineshrivankar1984/cello-operator-dashboard:v0 # Image build from Dockerfile
     container_name: cello-operator-dashboard
     hostname: cello-operator-dashboard
     restart: unless-stopped
