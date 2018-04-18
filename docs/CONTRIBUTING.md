@@ -43,7 +43,7 @@ $ git config user.name "your name"
 $ git config user.email "your email"
 ```
 
-(Optionally) Setup git-review by inputting your LFID. Notice this is only necessary once.
+(Optionally) Setup git-review by inputting your LFID. Notice this is only necessary once. (Note: git-review will need to be [installed](https://docs.openstack.org/infra/git-review/installation.html#installing-git-review).)
 ```sh
 $ git review -s
 ```
