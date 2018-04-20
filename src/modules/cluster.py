@@ -17,7 +17,7 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from agent import get_swarm_node_ip
+from agent import get_swarm_node_ip, KubernetesHost
 
 from common import db, log_handler, LOG_LEVEL, utils
 from common import CLUSTER_PORT_START, CLUSTER_PORT_STEP, \
@@ -35,7 +35,7 @@ from common import FabricPreNetworkConfig, FabricV1NetworkConfig
 
 from modules import host
 
-from agent import ClusterOnDocker, ClusterOnVsphere
+from agent import ClusterOnDocker, ClusterOnVsphere, ClusterOnKubernetes
 from modules.models import Cluster as ClusterModel
 from modules.models import Host as HostModel
 from modules.models import ClusterSchema, CLUSTER_STATE, \
@@ -67,7 +67,8 @@ class ClusterHandler(object):
         self.cluster_agents = {
             'docker': ClusterOnDocker(),
             'swarm': ClusterOnDocker(),
-            'vsphere': ClusterOnVsphere()
+            'vsphere': ClusterOnVsphere(),
+            'kubernetes': ClusterOnKubernetes()
         }
 
     def list(self, filter_data={}, col_name="active"):
@@ -207,6 +208,82 @@ class ClusterHandler(object):
 
         return all_ports, peer_ports, ca_ports, orderer_ports, explorer_ports
 
+    def _postprocess_cluster_creation(self, cid, host_id, name, cluster,
+                                      user_id, containers, service_urls):
+        if not containers or not service_urls:
+            logger.warning("failed to start cluster={}, then delete"
+                           .format(name))
+            self.delete(id=cid, record=False, forced=True)
+            return None
+        # creation done, update the container table in db
+        for k, v in containers.items():
+            container = Container(id=v, name=k, cluster=cluster)
+            container.save()
+
+        logger.info("service_urls info:{}".format(service_urls))
+        # update the service port table in db
+        for k, v in service_urls.items():
+            port = v.split(":")[1]
+            if port.isdigit():
+                port_num = int(port)
+            else:
+                port_num = 0
+            service_port = ServicePort(name=k, ip=v.split(":")[0],
+                                       port=port_num,
+                                       cluster=cluster)
+            service_port.save()
+
+        # update api_url, container, user_id and status
+        self.db_update_one(
+            {"id": cid},
+            {
+                "user_id": user_id,
+                'api_url': service_urls.get('rest', ""),
+                'service_url': service_urls,
+                'status': NETWORK_STATUS_RUNNING
+            }
+        )
+
+        def check_health_work(cid):
+            time.sleep(60)
+            self.refresh_health(cid)
+        t = Thread(target=check_health_work, args=(cid,))
+        t.start()
+
+        host = HostModel.objects.get(id=host_id)
+        host.update(add_to_set__clusters=[cid])
+        logger.info("Create cluster OK, id={}".format(cid))
+        return cid
+
+    def _create_k8s_cluster(self, name, host_id, cid, cluster, user_id,
+                            consensus):
+        worker = self.host_handler.get_active_host_by_id(host_id)
+
+        k8s_conig = KubernetesHost().get_kubernets_config(worker.k8s_param)
+        nfs_server = worker.k8s_param.get('nfsServer')
+        clusters_exists = ClusterModel.objects(host=worker)
+        ports_existed = [service.port for service in
+                         ServicePort.objects(cluster__in=clusters_exists)]
+        containers = self.cluster_agents[worker.type].create(k8s_conig, name,
+                                                             ports_existed,
+                                                             nfs_server,
+                                                             consensus)
+        if not containers:
+            logger.warning("failed to start cluster={}, then delete"
+                           .format(name))
+            self.delete(id=cid, record=False, forced=True)
+            return None
+        # creation done, update the container table in db
+        for k, v in containers.items():
+            container = Container(id=v, name=k, cluster=cluster)
+            container.save()
+
+        service_urls = self.cluster_agents[worker.type] \
+                           .get_services_urls(k8s_conig, name)
+        self._postprocess_cluster_creation(cid, host_id, name, cluster,
+                                           user_id, containers,
+                                           service_urls)
+
     def create(self, name, host_id, config, start_port=0,
                user_id=""):
         """ Create a cluster based on given data
@@ -240,14 +317,29 @@ class ClusterHandler(object):
         ca_num = 2 if peer_num > 1 else 1
 
         cid = uuid4().hex
-        mapped_ports, peer_ports, ca_ports, orderer_ports, explorer_ports = \
-            self.gen_ports_mapping(peer_num, ca_num, start_port, host_id)
-        if not mapped_ports:
-            logger.error("mapped_ports={}".format(mapped_ports))
-            return None
 
-        env_mapped_ports = dict(((k + '_port').upper(),
-                                 str(v)) for (k, v) in mapped_ports.items())
+        if worker.type == WORKER_TYPE_K8S:
+            if not name.isalnum() or not name.islower():
+                logger.error("The cluster name {} is not consist of \
+                             lower case alphanumeric \
+                              characters!".format(name))
+                return None
+            # ports of k8s cluster is assigned inside it's creation
+            mapped_ports, peer_ports, ca_ports, orderer_ports, explorer_ports \
+                = {}, {}, {}, {}, {}
+            env_mapped_ports = {}
+        else:
+            mapped_ports, peer_ports, ca_ports, orderer_ports,
+            explorer_ports = self.gen_ports_mapping(peer_num,
+                                                    ca_num,
+                                                    start_port,
+                                                    host_id)
+            if not mapped_ports:
+                logger.error("mapped_ports={}".format(mapped_ports))
+                return None
+
+            env_mapped_ports = dict(((k + '_port').upper(), str(v))
+                                    for (k, v) in mapped_ports.items())
 
         network_type = config['network_type']
         net = {  # net is a blockchain network instance
@@ -268,53 +360,40 @@ class ClusterHandler(object):
         cluster.host = worker
         cluster.save()
 
-        # start compose project, failed then clean and return
-        logger.debug("Start compose project with name={}".format(cid))
-        containers = self.cluster_agents[worker.type] \
-            .create(cid, mapped_ports, self.host_handler.schema(worker),
-                    config=config, user_id=user_id)
+        if worker.type == WORKER_TYPE_K8S:
+            logger.debug("Start creating kubernetes cluster thread with name \
+                         = {}".format(cid))
+            consensus = config['consensus_plugin']
+
+            def create_k8s_cluster(name, host_id, cid, cluster,
+                                   user_id, consensus):
+                self._create_k8s_cluster(name, host_id, cid, cluster,
+                                         user_id, consensus)
+            t = Thread(target=create_k8s_cluster, args=(name, host_id, cid,
+                                                        cluster, user_id,
+                                                        consensus,))
+            t.start()
+            return cid
+        else:
+            # start compose project, failed then clean and return
+            logger.debug("Start compose project with name={}".format(cid))
+            containers = self.cluster_agents[worker.type] \
+                .create(cid, mapped_ports, self.host_handler.schema(worker),
+                        config=config, user_id=user_id)
+
         if not containers:
             logger.warning("failed to start cluster={}, then delete"
                            .format(name))
             self.delete(id=cid, record=False, forced=True)
             return None
 
-        # creation done, update the container table in db
-        for k, v in containers.items():
-            container = Container(id=v, name=k, cluster=cluster)
-            container.save()
-
         # service urls can only be calculated after service is created
         service_urls = self.gen_service_urls(cid, peer_ports, ca_ports,
                                              orderer_ports, explorer_ports)
-        # update the service port table in db
-        for k, v in service_urls.items():
-            service_port = ServicePort(name=k, ip=v.split(":")[0],
-                                       port=int(v.split(":")[1]),
-                                       cluster=cluster)
-            service_port.save()
 
-        # update api_url, container, user_id and status
-        self.db_update_one(
-            {"id": cid},
-            {
-                "user_id": user_id,
-                'api_url': service_urls.get('rest', ""),
-                'service_url': service_urls,
-                'status': NETWORK_STATUS_RUNNING
-            }
-        )
-
-        def check_health_work(cid):
-            time.sleep(60)
-            self.refresh_health(cid)
-        t = Thread(target=check_health_work, args=(cid,))
-        t.start()
-
-        host = HostModel.objects.get(id=host_id)
-        host.update(add_to_set__clusters=[cid])
-        logger.info("Create cluster OK, id={}".format(cid))
-        return cid
+        return self._postprocess_cluster_creation(self, cid, host_id, name,
+                                                  cluster, user_id, containers,
+                                                  service_urls)
 
     def delete(self, id, record=False, forced=False):
         """ Delete a cluster instance
@@ -377,11 +456,40 @@ class ClusterHandler(object):
         config.update({
             "env": cluster.env
         })
-        if not self.cluster_agents[h.type].delete(id, worker_api,
-                                                  config):
+
+        if h.type == WORKER_TYPE_K8S:
+            k8s_conig = KubernetesHost().get_kubernets_config(h.k8s_param)
+            nfs_server = h.k8s_param.get('nfsServer')
+            clusters_exists = ClusterModel.objects(host=h)
+            ports_existed = [service.port for service in ServicePort.objects(
+                             cluster__in=clusters_exists)]
+            delete_result = self.cluster_agents[h.type] \
+                                .delete(k8s_conig,
+                                        c.name,
+                                        ports_existed,
+                                        nfs_server,
+                                        consensus_plugin)
+        else:
+            delete_result = self.cluster_agents[h.type].delete(id, worker_api,
+                                                               config)
+        if not delete_result:
             logger.warning("Error to run compose clean work")
             cluster.update(set__user_id=user_id, upsert=True)
             return False
+
+        if h.type == WORKER_TYPE_K8S:
+            cluster_ports = ServicePort.objects(cluster=c)
+            if cluster_ports:
+                for ports in cluster_ports:
+                    ports.delete()
+            cluster_containers = Container.objects(cluster=c)
+            if cluster_containers:
+                for container in cluster_containers:
+                    container.delete()
+
+        # remove cluster info from host
+        logger.info("remove cluster from host, cluster:{}".format(id))
+        h.update(pull__clusters=id)
 
         c.delete()
         return True
@@ -497,17 +605,52 @@ class ClusterHandler(object):
         else:
             return False
 
-        result = self.cluster_agents[h.type].start(
-            name=cluster_id, worker_api=h.worker_api,
-            mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
-            log_type=h.log_type,
-            log_level=h.log_level,
-            log_server='',
-            config=config,
-        )
+        if h.type == WORKER_TYPE_K8S:
+            k8s_conig = KubernetesHost().get_kubernets_config(h.k8s_param)
+            nfs_server = h.k8s_param.get('nfsServer')
+            clusters_exists = ClusterModel.objects(host=h)
+            ports_existed = [service.port for service in
+                             ServicePort.objects(cluster__in=clusters_exists)]
+            consensus = c.get('consensus_plugin')
+            result = self.cluster_agents[h.type].start(k8s_conig,
+                                                       c.get('name'),
+                                                       ports_existed,
+                                                       nfs_server,
+                                                       consensus)
+        else:
+            result = self.cluster_agents[h.type].start(
+                name=cluster_id, worker_api=h.worker_api,
+                mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
+                log_type=h.log_type,
+                log_level=h.log_level,
+                log_server='',
+                config=config,
+            )
         if result:
-            self.db_update_one({"id": cluster_id},
-                               {'status': 'running'})
+            if h.type == WORKER_TYPE_K8S:
+                k8s_conig = KubernetesHost().get_kubernets_config(h.k8s_param)
+                service_urls = self.cluster_agents[h.type] \
+                                   .get_services_urls(k8s_conig,
+                                                      c.get('name'))
+
+                cluster_obj = ClusterModel.objects.get(id=cluster_id)
+                # update the service port table in db
+                for k, v in service_urls.items():
+                    service_port = ServicePort(name=k, ip=v.split(":")[0],
+                                               port=int(v.split(":")[1]),
+                                               cluster=cluster_obj)
+                    service_port.save()
+                for k, v in result.items():
+                    container = Container(id=v, name=k, cluster=cluster_obj)
+                    container.save()
+
+                self.db_update_one({"id": cluster_id},
+                                   {'status': 'running',
+                                    'api_url': service_urls.get('rest', ""),
+                                    'service_url': service_urls})
+            else:
+                self.db_update_one({"id": cluster_id},
+                                   {'status': 'running'})
             return True
         else:
             return False
@@ -541,17 +684,61 @@ class ClusterHandler(object):
         else:
             return False
 
-        result = self.cluster_agents[h.type].restart(
-            name=cluster_id, worker_api=h.worker_api,
-            mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
-            log_type=h.log_type,
-            log_level=h.log_level,
-            log_server='',
-            config=config,
-        )
+        if h.type == WORKER_TYPE_K8S:
+            k8s_conig = KubernetesHost().get_kubernets_config(h.k8s_param)
+            nfs_server = h.k8s_param.get('nfsServer')
+            clusters_exists = ClusterModel.objects(host=h)
+            ports_existed = [service.port for service in
+                             ServicePort.objects(cluster__in=clusters_exists)]
+
+            consensus = c.get('consensus_plugin')
+            result = self.cluster_agents[h.type].restart(k8s_conig,
+                                                         c.get('name'),
+                                                         ports_existed,
+                                                         nfs_server, consensus)
+
+        else:
+            result = self.cluster_agents[h.type].restart(
+                name=cluster_id, worker_api=h.worker_api,
+                mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
+                log_type=h.log_type,
+                log_level=h.log_level,
+                log_server='',
+                config=config,
+            )
         if result:
-            self.db_update_one({"id": cluster_id},
-                               {'status': 'running'})
+            if h.type == WORKER_TYPE_K8S:
+                # Delete previous k8s containers and services as the value
+                # and name might both changed.
+                cluster_obj = ClusterModel.objects.get(id=cluster_id)
+                cluster_ports = ServicePort.objects(cluster=cluster_obj)
+                for ports in cluster_ports:
+                    ports.delete()
+                cluster_containers = Container.objects(cluster=cluster_obj)
+                for container in cluster_containers:
+                    container.delete()
+
+                for k, v in result.items():
+                    container = Container(id=v, name=k, cluster=cluster_obj)
+                    container.save()
+                k8s_conig = KubernetesHost().get_kubernets_config(h.k8s_param)
+                service_urls = self.cluster_agents[h.type] \
+                                   .get_services_urls(k8s_conig,
+                                                      c.get('name'))
+                # update the service port table in db
+                for k, v in service_urls.items():
+                    service_port = ServicePort(name=k, ip=v.split(":")[0],
+                                               port=int(v.split(":")[1]),
+                                               cluster=cluster_obj)
+                    service_port.save()
+
+                self.db_update_one({"id": cluster_id},
+                                   {'status': 'running',
+                                    'api_url': service_urls.get('rest', ""),
+                                    'service_url': service_urls})
+            else:
+                self.db_update_one({"id": cluster_id},
+                                   {'status': 'running'})
             return True
         else:
             return False
@@ -583,15 +770,38 @@ class ClusterHandler(object):
                 size=c.get('size'))
         else:
             return False
-        result = self.cluster_agents[h.type].stop(
-            name=cluster_id, worker_api=h.worker_api,
-            mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
-            log_type=h.log_type,
-            log_level=h.log_level,
-            log_server='',
-            config=config,
-        )
+
+        if h.type == WORKER_TYPE_K8S:
+            k8s_conig = KubernetesHost().get_kubernets_config(h.k8s_param)
+            nfs_server = h.k8s_param.get('nfsServer')
+            clusters_exists = ClusterModel.objects(host=h)
+            ports_existed = [service.port for service in
+                             ServicePort.objects(cluster__in=clusters_exists)]
+            consensus = c.get('consensus_plugin')
+            result = self.cluster_agents[h.type].stop(k8s_conig, c.get('name'),
+                                                      ports_existed,
+                                                      nfs_server,
+                                                      consensus)
+        else:
+            result = self.cluster_agents[h.type].stop(
+                name=cluster_id, worker_api=h.worker_api,
+                mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
+                log_type=h.log_type,
+                log_level=h.log_level,
+                log_server='',
+                config=config,
+            )
+
         if result:
+            if h.type == WORKER_TYPE_K8S:
+                cluster_obj = ClusterModel.objects.get(id=cluster_id)
+                cluster_ports = ServicePort.objects(cluster=cluster_obj)
+                for ports in cluster_ports:
+                    ports.delete()
+                cluster_containers = Container.objects(cluster=cluster_obj)
+                for container in cluster_containers:
+                    container.delete()
+
             self.db_update_one({"id": cluster_id},
                                {'status': 'stopped', 'health': ''})
             return True
