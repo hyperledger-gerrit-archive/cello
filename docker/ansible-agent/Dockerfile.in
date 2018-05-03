@@ -9,7 +9,7 @@
 
 
 # pull base image
-FROM alpine
+FROM _DOCKER_BASE_
 
 MAINTAINER Tong Li <litong01@us.ibm.com>
 
@@ -17,25 +17,24 @@ ARG user=ubuntu
 ARG uid=1000
 ARG gid=1000
 
-RUN apk --no-cache --update --virtual add bash curl py-pip     \
-    ansible ca-certificates gcc python-dev musl-dev openssl    \
-    openssh linux-headers sshpass                           && \
-    pip install --upgrade pip boto boto3 shade              && \
-    addgroup -g ${gid} ${user}                              && \
-    adduser -D -u ${uid} -G ${user} ${user}                 && \
-    adduser ${user} ping                                    && \
+RUN apt-get update                                          && \
+    apt-get install -y bash curl python-dev sshpass            \
+    python-pip build-essential openssh-client               && \
+    pip install --upgrade pip ansible boto boto3 shade         \
+    pyyaml openshift                                        && \
+    groupadd -g ${gid} ${user}                              && \
+    useradd -d /opt/agent -u ${uid} -g ${user} ${user}      && \
+    usermod -a -G root ${user}                              && \
     mkdir -p /opt/agent/.ssh                                && \
     cd /opt/agent/.ssh                                      && \
     echo "host *" > config                                  && \
     echo "  StrictHostKeyChecking no" >> config             && \
-    echo "  UserKnownHostsFile /dev/null" >> config         && \
-    rm -rf /var/cache/apk/*
+    echo "  UserKnownHostsFile /dev/null" >> config
 
-ADD https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kubectl /bin/kubectl
-ADD . /opt/agent
+ADD src/agent/ansible /opt/agent
 RUN ssh-keygen -q -t rsa -N '' -f /opt/agent/vars/fd        && \
     chown -R ${uid}:${gid} /opt/agent                       && \
-    chmod 755 /opt/agent/entrypoint.sh bin/kubectl
+    chmod 755 /opt/agent/entrypoint.sh
 ENV HOME /opt/agent
 ENV WORKDIR /opt/agent
 WORKDIR /opt/agent
