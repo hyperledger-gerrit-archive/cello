@@ -130,8 +130,6 @@ build/docker/%/.push: build/docker/%/$(DUMMY)
 
 docker: $(patsubst %,build/docker/%/$(DUMMY),$(DOCKER_IMAGES)) ##@Generate docker images locally
 
-docker-operator-dashboard: build/docker/operator-dashboard/$(DUMMY)
-
 docker-clean: image-clean ##@Clean all existing images
 
 DOCKERHUB_IMAGES = baseimage engine mongo nginx operator-dashboard user-dashboard watchdog ansible-agent
@@ -158,7 +156,7 @@ install: $(patsubst %,build/docker/%/.push,$(DOCKER_IMAGES))
 check-js: ##@Code Check check js code format
 	docker-compose -f docker-compose-check-js.yaml up
 
-check: setup-master docker-operator-dashboard ##@Code Check code format
+check: setup-master docker ##@Code Check code format
 	@$(MAKE) license
 	find ./docs -type f -name "*.md" -exec egrep -l " +$$" {} \;
 	tox
