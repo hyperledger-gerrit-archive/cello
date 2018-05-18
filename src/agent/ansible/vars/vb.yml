@@ -1,7 +1,7 @@
 ---
 auth: {
   # Define where the VirtualBox(VB) system is
-  auth_url: "192.168.0.35",
+  auth_url: "192.168.0.40",
   # User name to log in to the remote VB system
   username: "tongli",
   # Password to the VB system, can specify at command line
