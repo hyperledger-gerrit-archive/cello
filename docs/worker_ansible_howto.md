@@ -552,6 +552,32 @@ Ansible controller node. Group `etcdnodes` should list all the servers that you 
 etcd services on. Group `builders` should contain just one server that you wish to use to build
 Hyperledger Fabric artifacts such as executables and docker images.
 
+## <a name="use-the-existing-k8s"></a>Using existing k8s cluster
+
+Ansible agent allows you to deploy fabric network onto an existing k8s cluster. To do that,
+you only need to place your k8s configuration file and possibly certificates in the ansible
+agent vars directory, the kube configuration file must be named kubeconfig. Then you will
+use exactly same fabric network configuration file such as bc1st.yml, vb1st.yml file to
+design your own fabric network, you can use the sample configuration file like bc1st.yml or
+vb1st.yml to do some test run, or if you feel these sample fabric network configuration
+files do not reflect what you like to setup, you can make changes to the configuration file
+or create complete new ones. Then you simply run the followingcommand to set fabric network up.
+
+```
+    ansible-playbook -e "mode=apply env=bc1st deploy_type=k8s" setupfabric.yml
+```
+
+The above command will use the vars/kubeconfig file to deploy fabric network defined in
+vars/bc1st.yml file.
+
+To destroy what you just created, run the following command::
+
+```
+    ansible-playbook -e "mode=destroy env=bc1st deploy_type=k8s" setupfabric.yml
+```
+
+You can also choose to use the ansible agent container to run the above command.
+
 ## <a name="srrwy"></a>Required Ports And Security Considerations
 
 When you work with the public cloud, it is important to open or close certain
