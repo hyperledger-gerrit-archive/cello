@@ -21,7 +21,7 @@ peer channel create -o {{ cliorderer.name }}:7050 -c firstchannel \
 export CORE_PEER_TLS_ENABLED=true
 export GOPATH=/opt/gopath
 mkdir -p $GOPATH/src/chaincode
-cp firstcode.go $GOPATH/src/chaincode
+cp ../firstcode.go $GOPATH/src/chaincode
 
 {% for peer in allpeers %}
 
@@ -43,7 +43,7 @@ peer chaincode install -n firstchaincode -v 1.0 -p chaincode
 # Instantiate the chaincode
 echo '-------------- Instantiate chaincode'
 
-{% set chainpeer = peers[0] %}
+{% set chainpeer = allpeers[0] %}
 export CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/allorgs/keyfiles/{{ chainpeer.org }}/peers/{{ chainpeer.name }}.{{ chainpeer.org }}/tls/server.key
 export CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/allorgs/keyfiles/{{ chainpeer.org }}/peers/{{ chainpeer.name }}.{{ chainpeer.org }}/tls/ca.crt
 export CORE_PEER_ID={{ chainpeer.name }}
