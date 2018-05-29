@@ -11,6 +11,10 @@ metadata:
   labels:
     k8s-app: {{ zookeeper }}
 spec:
+{% if fabric.repo.username | length > 0 and fabric.repo.password | length > 0 %}
+  imagePullSecrets:
+  - name: regcred
+{% endif %}
   restartPolicy: Always
   containers:
     - name: {{ zookeeper }}
@@ -48,6 +52,10 @@ metadata:
   labels:
     k8s-app: {{ kafka }}
 spec:
+{% if fabric.repo.username | length > 0 and fabric.repo.password | length > 0 %}
+  imagePullSecrets:
+  - name: regcred
+{% endif %}
   restartPolicy: Always
   containers:
     - name: {{ kafka }}
@@ -86,6 +94,10 @@ metadata:
   labels:
     k8s-app: {{ ca.name }}
 spec:
+{% if fabric.repo.username | length > 0 and fabric.repo.password | length > 0 %}
+  imagePullSecrets:
+  - name: regcred
+{% endif %}
   restartPolicy: Always
   volumes:
     - name: task-pv-storage
@@ -134,6 +146,10 @@ metadata:
   labels:
     k8s-app: {{ peer.name }}
 spec:
+{% if fabric.repo.username | length > 0 and fabric.repo.password | length > 0 %}
+  imagePullSecrets:
+  - name: regcred
+{% endif %}
   restartPolicy: Always
   volumes:
     - name: varrun
@@ -201,6 +217,8 @@ spec:
     port: 7051
   - name: port2
     port: 7052
+  - name: port3
+    port: 7053
 {% endfor %}
 
 {% for orderer in allorderers %}
@@ -212,6 +230,10 @@ metadata:
   labels:
     k8s-app: {{ orderer.name }}
 spec:
+{% if fabric.repo.username | length > 0 and fabric.repo.password | length > 0 %}
+  imagePullSecrets:
+  - name: regcred
+{% endif %}
   restartPolicy: Always
   volumes:
     - name: task-pv-storage
