@@ -1,6 +1,7 @@
 ---
 logging:
-{% set project_version = fabric.baseimage_tag %}
+{% set tag = fabric.baseimage_tag.split('-') %}
+{% set project_version = tag[1] %}
 {% if project_version | version_compare('1.1.0','>=') or 'stable' in project_version or project_version == 'latest' %}
     level:      info
 {% else %}
