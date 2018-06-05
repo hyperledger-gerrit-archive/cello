@@ -1,5 +1,6 @@
 ---
-{% set project_version = fabric.baseimage_tag %}
+{% set tag = fabric.baseimage_tag.split('-') %}
+{% set project_version = tag[1] %}
 {% if orderers | length > 0 %}
 OrdererOrgs:
 {% for org in ordererorgs %}
