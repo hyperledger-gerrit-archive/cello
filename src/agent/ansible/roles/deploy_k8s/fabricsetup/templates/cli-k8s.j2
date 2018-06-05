@@ -21,7 +21,11 @@ spec:
   containers:
     - name: fabriccli
       image: {{ fabric.repo.url }}fabric-tools:{{ fabric.baseimage_tag }}
+{% if fabric.baseimage_tag == 'latest' or 'stable' in fabric.baseimage_tag %}
+      imagePullPolicy: Always
+{% else %}
       imagePullPolicy: IfNotPresent
+{% endif %}
       securityContext:
         privileged: true
       env:
