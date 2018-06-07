@@ -18,6 +18,8 @@ from common import log_handler, LOG_LEVEL, \
     CODE_CREATED, \
     request_debug
 
+from common.utils import K8S_CRED_TYPE
+
 from modules import host_handler
 from modules.models import Cluster as ClusterModel
 from modules.models import Host as HostModel
@@ -141,6 +143,64 @@ def host_create():
                                      log_server=log_server,
                                      host_type=host_type,
                                      params=vsphere_param)
+    elif host_type == 'kubernetes':
+        worker_api = r.form['k8s_master_address']
+        k8s_param = {
+            'address': r.form['k8s_master_address'],
+            'credType': r.form['k8s_cred_type'],
+            'username': r.form['k8s_username'],
+            'password': r.form['k8s_password'],
+            'cert': r.form['k8s_cert'],
+            'key': r.form['k8s_key'],
+            'config': r.form['k8s_config'],
+            'nfsServer': r.form['k8s_nfs_server'],
+            'extra_params': r.form['k8s_extra_params']
+        }
+        if "k8s_ssl" in r.form and r.form["k8s_ssl"] == "on":
+            k8s_ssl = "true"
+        else:
+            k8s_ssl = "false"
+        k8s_param['use_ssl'] = k8s_ssl
+
+        logger.debug("name={}, capacity={},"
+                     "fillup={}, schedulable={}, log={}/{}, k8s_param={}".
+                     format(name, capacity, autofill, schedulable,
+                            log_type, log_server, k8s_param))
+
+        k8s_must_have_params = {
+            'Name': name,
+            'Capacity': capacity,
+            'LoggingType': log_type,
+            'K8SAddress': r.form['k8s_master_address'],
+            'K8SCredType': r.form['k8s_cred_type'],
+            'K8SNfsServer': r.form['k8s_nfs_server'],
+            'K8SUseSsl': k8s_param['use_ssl']
+        }
+
+        if k8s_must_have_params['K8SCredType'] == K8S_CRED_TYPE['account']:
+            k8s_must_have_params['K8SUsername'] = r.form['k8s_username']
+            k8s_must_have_params['K8SPassword'] = r.form['k8s_password']
+        elif k8s_must_have_params['K8SCredType'] == K8S_CRED_TYPE['cert']:
+            k8s_must_have_params['K8SCert'] = r.form['k8s_cert']
+            k8s_must_have_params['K8SKey'] = r.form['k8s_key']
+        elif k8s_must_have_params['K8SCredType'] == K8S_CRED_TYPE['config']:
+            k8s_must_have_params['K8SConfig'] = r.form['k8s_config']
+
+        for key in k8s_must_have_params:
+            if k8s_must_have_params[key] == '':
+                error_msg = "host POST without {} data".format(key)
+                logger.warning(error_msg)
+                return make_fail_resp(error=error_msg, data=r.form)
+        result = host_handler.create(name=name, worker_api=worker_api,
+                                     capacity=int(capacity),
+                                     autofill=autofill,
+                                     schedulable=schedulable,
+                                     log_level=log_level,
+                                     log_type=log_type,
+                                     log_server=log_server,
+                                     host_type=host_type,
+                                     params=k8s_param)
+
     else:
         logger.debug("name={}, worker_api={}, capacity={}"
                      "fillup={}, schedulable={}, log={}/{}".
