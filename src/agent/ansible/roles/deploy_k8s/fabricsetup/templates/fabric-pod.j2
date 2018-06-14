@@ -131,6 +131,7 @@ spec:
     - { name: "port2", port: 9093 }
 {% endfor %}
 
+{% if allcas is defined and (allcas | length > 0) %}
 {% for ca in allcas %}
 ---
 apiVersion: v1
@@ -200,7 +201,9 @@ spec:
       port: 7054
 
 {% endfor %}
+{% endif %}
 
+{% if allpeers is defined and (allpeers | length > 0) %}
 {% for peer in allpeers %}
 ---
 apiVersion: v1
@@ -311,7 +314,9 @@ spec:
   - name: port3
     port: 7053
 {% endfor %}
+{% endif %}
 
+{% if allorderers is defined and (allorderers | length > 0) %}
 {% for orderer in allorderers %}
 ---
 apiVersion: v1
@@ -387,7 +392,7 @@ spec:
       port: 7050
 
 {% endfor %}
-
+{% endif %}
 ---
 apiVersion: v1
 kind: Pod

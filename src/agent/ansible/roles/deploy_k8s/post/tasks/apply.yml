@@ -1,0 +1,237 @@
+---
+- name: Setup and initialize variables
+  set_fact:
+    fabricworkdir: "/opt/gopath/{{ env }}/fabric"
+    fabricpath: "/opt/gopath/{{ env }}/src/github.com/hyperledger/fabric"
+    gopath: "/opt/gopath/{{ env }}"
+    peers: "{{ [] }}"
+    orderers: "{{ [] }}"
+    cas: "{{ [] }}"
+    kafkas: "{{ [] }}"
+    kafkanodes: ""
+    zookeepers: "{{ [] }}"
+    znodes: ""
+    zkparam: ""
+    index: 1
+    zoo_ids: "{{ {} }}"
+    kafka_ids: "{{ {} }}"
+    zookeeperls: "{{ [] }}"
+    kafkals: "{{ [] }}"
+    peerls: "{{ [] }}"
+    ordererls: "{{ [] }}"
+    cals: "{{ [] }}"
+    allpeers: "{{ [] }}"
+    clihost: ""
+    filterstr: ""
+
+- name: Make sure that working directory exists and clean
+  file:
+    path: "{{ fabricworkdir }}/run"
+    state: "{{ item }}"
+    mode: 0775
+  with_items:
+    - "absent"
+    - "directory"
+
+- name: Create component list
+  set_fact:
+    cals: "{{ cals | default([]) + item.value.cas | default([]) }}"
+    ordererls: "{{ ordererls | default([]) + item.value.orderers | default([]) }}"
+    peerls: "{{ peerls | default([]) + item.value.peers | default([]) }}"
+    zookeeperls: "{{ zookeeperls | default([]) + item.value.zookeepers | default([]) }}"
+    kafkals: "{{ kafkals | default([]) + item.value.kafkas | default([]) }}"
+  with_dict: "{{ fabric.network }}"
+
+- name: Sort component list
+  set_fact:
+    zookeeperls: "{{ zookeeperls | sort }}"
+    kafkals: "{{ kafkals | sort }}"
+
+- name: Generate zookeeper node list
+  set_fact:
+    znodes: "{{ znodes }} server.{{ index }}={{ item }}:2888:3888"
+    zkparam: "{{ zkparam + item }}:2181 "
+    zoo_ids: "{{ zoo_ids | combine({item: index}) }}"
+    index: "{{ index | int + 1 }}"
+  with_items: "{{ zookeeperls | default([]) }}"
+
+- name: Reset the index
+  set_fact:
+    index: 1
+
+- name: Generate kafka broker ids
+  set_fact:
+    kafka_ids: "{{ kafka_ids | combine({item: index}) }}"
+    index: "{{ index | int + 1 }}"
+  with_items: "{{ kafkals | default([]) }}"
+
+- name: Get all peer object list
+  set_fact:
+    allpeers: |
+      {{ allpeers | default([]) + [{'org':item.split('@')[1].split('.')[-1],
+        'name':item.split('@')[1] | replace('.', '-'),
+        'role':item.split('@')[0]}] }}
+  with_items: "{{ peerls }}"
+
+- name: Get all ca object list
+  set_fact:
+    allcas: |
+      {{ allcas | default([]) + [{ 'org':item.split('.')[-1],
+        'name':item | replace('.', '-') }] }}
+  with_items: "{{ cals }}"
+
+- name: Get all orderer object list
+  set_fact:
+    allorderers: |
+      {{ allorderers | default([]) + [{ 'org':item.split('.')[-1],
+        'name':item | replace('.', '-') }] }}
+  with_items: "{{ ordererls }}"
+
+- name: Create deployment files for certssetup and pvc
+  template:
+    src: "{{ playbook_dir }}/../deploy_k8s/fabricsetup/templates/{{ item }}.j2"
+    dest: "{{ playbook_dir }}/../../run/{{ item }}.yaml"
+  with_items:
+    - pvc
+    - certssetup
+
+- name: Create persistent volume
+  command: >-
+    ./kubectl --kubeconfig kubeconfig apply -f ../run/pvc.yaml
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  tags: "createpvc"
+
+- name: Query PVC status
+  command: >-
+    ./kubectl --kubeconfig kubeconfig get -o=custom-columns=STATUS:.status.phase
+    pvc fabriccerts
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  register: pvcstatus
+  until: pvcstatus.stdout.find("Bound") >= 0
+  retries: 50
+  delay: 10
+  tags: "querypvc"
+
+- name: Create certs volume initialization pod
+  command: >-
+    ./kubectl --kubeconfig kubeconfig apply -f ../run/certssetup.yaml
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  tags: "createcertspod"
+
+- name: Query initialization container status
+  command: >-
+    ./kubectl --kubeconfig kubeconfig get -o=custom-columns=STATUS:.status.phase
+    pod fabriccertspod
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  register: pvcstatus
+  until: pvcstatus.stdout.find("Running") >= 0
+  retries: 5
+  delay: 10
+  tags: "querypvc"
+
+- name: Check the status of secret for pulling images
+  command: >-
+    ./kubectl --kubeconfig='kubeconfig' get secrets -o=custom-columns=NAME:.metadata.name
+    regcred
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  ignore_errors: yes
+  no_log: True
+  register: "secretstatus"
+  when: >
+    fabric.baseimage_tag | length > 0 and
+    fabric.repo.username | default("") | length > 0 and
+    fabric.repo.password | default("") | length > 0
+
+- name: Create secret for image
+  command: >-
+    ./kubectl --kubeconfig kubeconfig create secret docker-registry regcred --docker-server={{ fabric.repo.url }}
+    --docker-username={{ fabric.repo.username }} --docker-password={{ fabric.repo.password }} --docker-email=email@email.com
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  register: "secretcreate"
+  when: >
+    fabric.baseimage_tag | length > 0 and
+    fabric.repo.username | default("") | length > 0 and
+    fabric.repo.password | default("") | length > 0 and
+    secretstatus.rc != 0
+
+- name: Set peer and orderer to run peer channel create command
+  set_fact:
+    clipeer: "{{ allpeers | random }}"
+    cliorderer: "{{ allorderers | random }}"
+  when: peerls | length > 0
+
+- name: Get all peer orgs
+  set_fact:
+    orgmembers: "{{ allpeers | map(attribute='org') | list  | unique | sort | join(\".member' '\") | trim | replace(' ', ',') }}"
+
+- name: Create peer channel command script
+  template:
+    src: "{{ playbook_dir }}/../deploy_k8s/fabricsetup/templates/dochannel.j2"
+    dest: "{{ fabricworkdir }}/keyfiles/dochannel.sh"
+    mode: "u=rx,g=rx"
+
+- name: Copy certs onto the persistent volume
+  command: >-
+    ./kubectl --kubeconfig kubeconfig cp {{ item }} fabriccertspod:/fabriccerts
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  with_items:
+    - "{{ fabricworkdir }}/certs.tgz"
+    - "{{ fabricworkdir }}/keyfiles/dochannel.sh"
+    - "{{ playbook_dir }}/../deploy_k8s/fabricsetup/templates/firstcode.go"
+  tags: "placecerts"
+
+- name: Untar certs.tgz in the Persistent volume
+  command: >-
+    ./kubectl --kubeconfig kubeconfig exec fabriccertspod -c task-pv-container
+    -- tar -C /fabriccerts -xzvf /fabriccerts/certs.tgz
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  tags: "untarcerts"
+
+- name: Removing the certs pod
+  command: >-
+    ./kubectl --kubeconfig kubeconfig delete -f ../run/certssetup.yaml
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  tags: "deletecertspod"
+
+- name: Create k8s deployment files
+  template:
+    src: "{{ playbook_dir }}/../deploy_k8s/fabricsetup/templates/fabric-pod.j2"
+    dest: "{{ playbook_dir }}/../../vars/fabric-pod.yml"
+
+- name: Start fabric pods
+  command: "./kubectl --kubeconfig='kubeconfig' apply -f fabric-pod.yml"
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  tags: "fabricup"
+
+- name: Create peer channel command k8s deployment file
+  template:
+    src: "{{ playbook_dir }}/../deploy_k8s/fabricsetup/templates/cli-k8s.j2"
+    dest: "{{ playbook_dir }}/../../vars/cli-k8s.yml"
+
+- name: Wait for containers to be ready
+  pause:
+    seconds: 60
+
+- name: Start fabriccli pod
+  command: "./kubectl --kubeconfig='kubeconfig' apply -f cli-k8s.yml"
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  tags: "cliup"
+
+- name: Pull ccenv image to docker endpoint
+  command: >-
+    ./kubectl --kubeconfig kubeconfig exec dockerendpoint
+    -- sh -c "docker pull {{ fabric.repo.url }}fabric-ccenv:{{ fabric.baseimage_tag }}"
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  tags: "pullccenv"

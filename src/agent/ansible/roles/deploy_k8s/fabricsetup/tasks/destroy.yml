@@ -10,14 +10,5 @@
     chdir: "{{ playbook_dir }}/../../vars/"
   tags: "fabricdown"
 
-- name: Stop fabriccli pod
-  command: >-
-    ./kubectl --kubeconfig='kubeconfig' delete -f cli-k8s.yml
-  args:
-    chdir: "{{ playbook_dir }}/../../vars/"
-  tags: "clidown"
-
-- name: Make sure that working directory is removed
-  file:
-    path: "{{ fabricworkdir }}"
-    state: absent
+- name: Reuse common code
+  include_tasks: "{{ playbook_dir }}/../common/config_destroy.yml"
