@@ -1,0 +1,23 @@
+---
+- name: Setup variables
+  set_fact:
+    fabricworkdir: "/opt/gopath/{{ env }}/fabric"
+
+- name: Stop fabric pods
+  command: >-
+    ./kubectl --kubeconfig='kubeconfig' delete -f fabric-pod.yml
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  tags: "fabricdown"
+
+- name: Stop fabriccli pod
+  command: >-
+    ./kubectl --kubeconfig='kubeconfig' delete -f cli-k8s.yml
+  args:
+    chdir: "{{ playbook_dir }}/../../vars/"
+  tags: "clidown"
+
+- name: Make sure that working directory is removed
+  file:
+    path: "{{ fabricworkdir }}"
+    state: absent

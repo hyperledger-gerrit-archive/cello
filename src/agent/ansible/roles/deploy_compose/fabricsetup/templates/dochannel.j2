@@ -14,7 +14,7 @@ export CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/allorgs/{{ clipeer.org }}/users/
 # Run the peer channel create command
 cd /etc/hyperledger/allorgs
 peer channel create -o {{ cliorderer.name }}:7050 -c firstchannel \
-  -f /etc/hyperledger/allorgs/firstchannel.tx --tls true --timeout 120 \
+  -f /etc/hyperledger/allorgs/firstchannel.tx --tls true --timeout 240 \
   --cafile /etc/hyperledger/allorgs/{{ cliorderer.org }}/orderers/{{ cliorderer.name }}.{{ cliorderer.org }}/msp/tlscacerts/tlsca.{{ cliorderer.org }}-cert.pem
 
 export CORE_PEER_TLS_ENABLED=true
@@ -63,7 +63,7 @@ export CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/allorgs/{{ clipeer.org }}/users/
 # Run the peer channel create command
 cd /etc/hyperledger/allorgs
 peer channel create -o {{ cliorderer.name }}:7050 -c firstchannel \
-  -f /etc/hyperledger/allorgs/firstchannel.tx --timeout 120
+  -f /etc/hyperledger/allorgs/firstchannel.tx --timeout 240
 
 export CORE_PEER_TLS_ENABLED=false
 export GOPATH=/opt/gopath
