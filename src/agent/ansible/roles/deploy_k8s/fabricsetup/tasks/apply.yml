@@ -227,11 +227,3 @@
   args:
     chdir: "{{ playbook_dir }}/../../vars/"
   tags: "cliup"
-
-- name: Pull ccenv image to docker endpoint
-  command: >-
-    ./kubectl --kubeconfig kubeconfig exec dockerendpoint
-    -- sh -c "docker pull {{ fabric.repo.url }}fabric-ccenv:{{ fabric.baseimage_tag }}"
-  args:
-    chdir: "{{ playbook_dir }}/../../vars/"
-  tags: "pullccenv"

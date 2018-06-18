@@ -257,7 +257,7 @@ spec:
       securityContext:
         privileged: true
       env:
-        - { name: "CORE_VM_ENDPOINT", value: "dockerendpoint:2375" }
+        - { name: "CORE_VM_ENDPOINT", value: "localhost:2375" }
         - { name: "FABRIC_CFG_PATH", value: "/etc/hyperledger/fabric/keyfiles/{{ peer.org }}/peers/{{ peer.name }}.{{ peer.org }}" }
         - { name: "CORE_LOGGING_LEVEL", value: "{{ fabric.logging_level | default('ERROR') }}" }
         - { name: "CORE_PEER_ENDORSER_ENABLED", value: "true" }
@@ -293,6 +293,12 @@ spec:
         - { mountPath: "/etc/hyperledger/fabric", name: "task-pv-storage" }
       command: ["peer"]
       args: ["node", "start"]
+    - name: dockerendpoint-{{ peer.name }}
+      image: docker:17.12.1-ce-rc2-dind
+      imagePullPolicy: IfNotPresent
+{% include './resource.j2' %}
+      securityContext:
+        privileged: true
 ---
 kind: Service
 apiVersion: v1
@@ -389,31 +395,3 @@ spec:
 {% endfor %}
 
 ---
-apiVersion: v1
-kind: Pod
-metadata:
-  name: dockerendpoint
-  labels:
-    k8s-app: dockerendpoint
-spec:
-  containers:
-    - name: dockerendpoint
-      image: docker:17.12.1-ce-rc2-dind
-      imagePullPolicy: IfNotPresent
-{% include './resource.j2' %}
-      securityContext:
-        privileged: true
----
-kind: Service
-apiVersion: v1
-metadata:
-  labels:
-    k8s-app: dockerendpoint
-  name: dockerendpoint
-spec:
-  selector:
-    k8s-app: dockerendpoint
-  ports:
-    - name: port1
-      port: 2375
-      targetPort: 2375
