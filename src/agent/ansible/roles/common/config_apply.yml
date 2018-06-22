@@ -118,3 +118,22 @@
 - name: Create all orgs list
   set_fact:
     allorgs: "{{ (caorgs + peerorgs + ordererorgs) | sort | unique }}"
+
+- name: Create peerorg rootca list
+  set_fact:
+    peerorg_rootca: |
+      {{ peerorg_rootca | default([]) | replace('+', ',') }}  +  [ '/etc/hyperledger/fabric/keyfiles/{{ item }}/ca/ca.{{ item }}-cert.pem' ]
+  with_items: "{{ peerorgs }}"
+  when: fabric.mutual_tls == true
+
+- name: Create orderers rootca list
+  set_fact:
+    orderer_rootca: |
+      {{ orderer_rootca | default([]) | replace('+', ',') }} + [ '/etc/hyperledger/fabric/keyfiles/{{ item.org }}/orderers/{{ item.name }}.{{ item.org }}/tls/ca.crt' ]
+  with_items: "{{ allorderers }}"
+  when: fabric.mutual_tls == true
+
+- name: Joining the orderer rootca list and peerorg rootca list
+  set_fact:
+    rootca: "{{ peerorg_rootca }} + {{ orderer_rootca }}"
+  when: fabric.mutual_tls == true
