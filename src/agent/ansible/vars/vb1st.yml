@@ -18,6 +18,8 @@ fabric: {
   # options are "goleveldb", "CouchDB", default is goleveldb
   peer_db: "goleveldb",
   tls: false,
+  # option for enabling mutual tls (client) in the network
+  mutual_tls: false,
   logging_level: "ERROR",
   k8s: {
     exposeserviceport: True,
