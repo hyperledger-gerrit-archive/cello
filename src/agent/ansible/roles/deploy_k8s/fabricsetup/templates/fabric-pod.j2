@@ -284,6 +284,10 @@ spec:
 {% if project_version | version_compare('1.1.0','>=') or 'stable' in project_version or project_version == 'latest' %}
         - { name: "CORE_PEER_CHAINCODEADDRESS", value: "{{ peer.name }}:7052" }
         - { name: "CORE_PEER_CHAINCODELISTENADDRESS", value: "0.0.0.0:7052" }
+{% if fabric.mutual_tls %}
+        - { name: "CORE_PEER_TLS_CLIENTAUTHREQUIRED", value: "true" }
+        - { name: "CORE_PEER_TLS_CLIENTROOTCAS_FILES", value: "{{ rootca | list | join (" ")}}" }
+{% endif %}
 {% else %}
         - { name: "CORE_PEER_CHAINCODELISTENADDRESS", value: "{{ peer.name }}:7052" }
 {% endif %}
@@ -369,7 +373,6 @@ spec:
         - { name: "ORDERER_GENERAL_GENESISFILE", value: "/var/hyperledger/orderer/keyfiles/genesis.block" }
         - { name: "ORDERER_GENERAL_LOCALMSPID", value: "{{ orderer.org }}" }
         - { name: "ORDERER_GENERAL_LOCALMSPDIR", value: "/var/hyperledger/orderer/keyfiles/{{ orderer.org }}/orderers/{{ orderer.name }}.{{ orderer.org }}/msp" }
-        - { name: "ORDERER_GENERAL_TLS_CLIENTAUTHENABLED", value: "false" }
         - { name: "ORDERER_GENERAL_TLS_ENABLED", value: "{{ fabric.tls | lower }}" }
 {% if fabric.tls %}
         - { name: "ORDERER_GENERAL_TLS_PRIVATEKEY", value: "/var/hyperledger/orderer/keyfiles/{{ orderer.org }}/orderers/{{ orderer.name }}.{{ orderer.org }}/tls/server.key" }
@@ -379,6 +382,14 @@ spec:
         - { name: "ORDERER_KAFKA_RETRY_SHORTINTERVAL", value: "1s" }
         - { name: "ORDERER_KAFKA_RETRY_SHORTTOTAL", value: "30s" }
         - { name: "ORDERER_KAFKA_VERBOSE", value: "true" }
+{% if fabric.mutual_tls %}
+{% if project_version | version_compare('1.1.0','>=') or 'stable' in project_version or project_version == 'latest' %}
+        - { name: "ORDERER_GENERAL_TLS_CLIENTAUTHREQUIRED", value: "true" }
+{% else %}
+        - { name: "ORDERER_GENERAL_TLS_CLIENTAUTHENABLED", value: "true" }
+{% endif %}
+        - { name: "ORDERER_GENERAL_TLS_CLIENTROOTCAS_FILES", value: "[{{ rootca | list | join (" ")}}]" }
+{% endif %}
 {% include './resource.j2' %}
       volumeMounts:
         - { mountPath: "/var/hyperledger/orderer", name: "task-pv-storage" }
