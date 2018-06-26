@@ -373,12 +373,13 @@ def _compose_set_env(name, worker_api, mapped_ports=SERVICE_PORTS,
             CLUSTER_NETWORK + "_{}".format(config['consensus_plugin']),
         'HLF_VERSION': HLF_VERSION,
     }
-    if config['network_type'] == NETWORK_TYPE_FABRIC_V1:
+    if "fabric-1" in config['network_type']:
         envs.update({
             'COMPOSE_FILE': "fabric-{}-{}.yaml".format(
                 config['consensus_plugin'],
                 config['size']),
-            'COMPOSE_PROJECT_PATH': '/opt/cello/fabric-1.0',
+            'COMPOSE_PROJECT_PATH': "/opt/cello/{}".format(
+                config['network_type']),
         })
     elif config['network_type'] == NETWORK_TYPE_FABRIC_PRE_V1:
         envs.update({
