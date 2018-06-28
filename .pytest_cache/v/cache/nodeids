@@ -1,0 +1,5 @@
+[
+  "test/unit/demo_test.py::ChaincodeTest::test_add_one",
+  "test/unit/test_health_check.py::TestHealthCheck::test_helth_check_f",
+  "test/unit/test_health_check.py::TestHealthCheck::test_helth_check_o"
+]
