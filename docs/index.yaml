@@ -1,0 +1,27 @@
+apiVersion: v1
+entries:
+  cello-master:
+  - apiVersion: v1
+    created: 2018-07-03T16:11:30.321582+08:00
+    description: Cello is a Block As a service in hyperledger.
+    digest: efa538cd5c6631f18f4a9dc126d32c5fba88dfff8ce9e41c5e19d5f69682accf
+    home: https://www.hyperledger.org/projects/cello
+    icon: https://wiki.hyperledger.org/_media/projects/hyperledger_cello_logo_color.png
+    keywords:
+    - Hyperledger
+    - BAAS
+    - Cello
+    maintainers:
+    - email: hightall@me.com
+      name: Haitao Yue
+    - email: yangbaohua@gmail.com
+      name: Baohua Yang
+    - email: litong01@us.ibm.com
+      name: Tong Li
+    name: cello-master
+    sources:
+    - https://github.com/hyperledger/cello
+    urls:
+    - https://haitaoyue.github.io/cello-helm/cello-master-0.1.0.tgz
+    version: 0.1.0
+generated: 2018-07-03T16:11:30.315954+08:00
