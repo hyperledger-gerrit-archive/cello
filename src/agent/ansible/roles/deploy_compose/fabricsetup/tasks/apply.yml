@@ -78,12 +78,6 @@
     dest: "{{ fabricworkdir }}/run"
     remote_src: true
 
-- name: Process private key files
-  template:
-    src: "{{ playbook_dir }}/../deploy_compose/fabricsetup/templates/fabric-ca-server-config.j2"
-    dest: "{{ fabricworkdir }}/run/keyfiles/{{ item.org }}/ca/fabric-ca-server-config.yaml"
-  with_items: "{{ cas }}"
-
 - name: Get the peer org list
   set_fact:
     peerorgs: "{{ peers | map(attribute='org') | list  | unique | sort }}"
