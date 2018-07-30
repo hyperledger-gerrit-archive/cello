@@ -87,7 +87,6 @@ services:
       - FABRIC_CFG_PATH=/etc/hyperledger/fabric
     volumes:
       - /opt/cello/baas:/opt/data
-    command: bash -c "cd /usr/app/src && [ "$DEV" = True ] && npm run dev || npm start"
 
   # cello engine service
   engine:
