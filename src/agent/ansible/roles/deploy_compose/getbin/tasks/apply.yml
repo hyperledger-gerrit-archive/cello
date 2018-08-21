@@ -1,7 +1,7 @@
 ---
 - name: Setup variables
   set_fact:
-    fabricpath: "/opt/gopath/{{ env }}/src/github.com/hyperledger/fabric"
+    fabricpath: "{{ pjroot }}/vars/{{ env }}/src/github.com/hyperledger/fabric"
 
 - name: Setup hyperledger directory
   file:

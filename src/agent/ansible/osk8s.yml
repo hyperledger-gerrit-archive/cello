@@ -10,18 +10,24 @@
   vars:
     env: "os"
     cloud_type: "os"
+    pjroot: "{{ playbook_dir }}"
+    pjrun: "{{ playbook_dir }}/vars/os/run"
   import_playbook: "roles/cloud_os/plays.yml"
 
 - name: Run the plays
   vars:
     env: "os"
     env_type: "k8s"
+    pjroot: "{{ playbook_dir }}"
+    pjrun: "{{ playbook_dir }}/vars/os/run"
   import_playbook: "roles/env_k8s/{{ mode }}.yml"
 
 - name: Run the plays
   vars:
     env: "bc1st"
     deploy_type: "k8s"
+    pjroot: "{{ playbook_dir }}"
+    pjrun: "{{ playbook_dir }}/vars/os/run"
   import_playbook: "roles/deploy_k8s/plays.yml"
 
 - name: Inform the installer
