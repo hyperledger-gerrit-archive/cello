@@ -7,6 +7,9 @@
         starttime: "{{ ansible_date_time }}"
 
 - name: Run the plays
+  vars:
+    pjroot: "{{ playbook_dir }}"
+    pjrun: "{{ playbook_dir }}/vars/{{ env }}/run"
   import_playbook: "roles/deploy_{{ deploy_type | default('compose') }}/plays.yml"
 
 - name: inform the installer
