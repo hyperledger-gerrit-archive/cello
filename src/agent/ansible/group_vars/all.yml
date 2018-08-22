@@ -5,3 +5,4 @@ etcdtoken: "{{ lookup('password',
 proxy_env: {
 }
 
+pjroot: "{{ playbook_dir }}/../.."
