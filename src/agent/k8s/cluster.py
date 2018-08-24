@@ -58,6 +58,8 @@ class ClusterOnKubernetes(ClusterBase):
                 consensus = self._get_cluster_info(cid, config)
 
             operation = K8sClusterOperation(kube_config)
+            cluster_name = self.trim_cluster_name(cluster_name)
+
             containers = operation.deploy_cluster(cluster_name,
                                                   ports_index,
                                                   nfsServer_ip,
@@ -177,3 +179,8 @@ class ClusterOnKubernetes(ClusterBase):
         else:
             logger.error("Failed to Restart Kubernetes Cluster")
             return None
+
+    def trim_cluster_name(self, cluster_name):
+        if cluster_name.find("_") != -1:
+            cluster_name = cluster_name.replace("_", "-")
+        return cluster_name.lower()
