@@ -19,6 +19,7 @@ fabric: {
   peer_db: "CouchDB",
   tls: false,
   generate_certs: true,
+  mutual_tls: false,
   logging_level: "ERROR",
   k8s: {
     exposeserviceport: False,
