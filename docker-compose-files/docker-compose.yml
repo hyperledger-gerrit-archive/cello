@@ -38,6 +38,8 @@ services:
   #    - PASSWORD=pass
   rabbitmq:
     image: rabbitmq
+    restart: unless-stopped
+    container_name: cello-dashboard_mongo
     environment:
     - RABBITMQ_DEFAULT_USER=$RABBITMQ_DEFAULT_USER
     - RABBITMQ_DEFAULT_PASS=$RABBITMQ_DEFAULT_PASS
@@ -64,7 +66,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./src/agent/docker/_compose_files:/cello
+      - $ROOT_PATH/src/agent/docker/_compose_files:/cello
 
  #TODO: need to follow other images to put at dockerhub
   user-dashboard:
@@ -159,13 +161,3 @@ services:
       - NO_USED=0
     volumes:
       - /opt/cello/dashboard_mongo:/data/db
-
-  nfs:
-    image: itsthenetwork/nfs-server-alpine:9
-    restart: unless-stopped
-    environment:
-      - SHARED_DIRECTORY=/cello
-    volumes:
-      - ./src/agent/docker/_compose_files:/cello
-    privileged: true
-    network_mode: host
