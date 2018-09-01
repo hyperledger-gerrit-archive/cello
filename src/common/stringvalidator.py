@@ -33,7 +33,7 @@ class StringValidator(object):
 
                 method = getattr(self, '_check_' + check_name)
                 results[check] = method(input.strip(),
-                                        args) if args else method(input)
+                                        args) if args else method(input.strip())
 
                 if not results[check]:
                     if log:
