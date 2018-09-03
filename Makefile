@@ -200,7 +200,7 @@ changelog: ##@Update the changelog.md file in the root folder
 
 doc: ##@Create local online documentation and start serve
 	pip install mkdocs
-	mkdocs serve
+	mkdocs serve -a 0.0.0.0:8000
 
 # Use like "make log service=dashboard"
 log: ##@Log tail special service log, Use like "make log service=dashboard"
