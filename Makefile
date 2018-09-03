@@ -69,6 +69,7 @@ REPLACE_SLASH:=\/
 -include .makerc/operator-dashboard
 -include .makerc/user-dashboard
 -include .makerc/worker-node
+-include docker-env.mk
 
 export ROOT_PATH = ${PWD}
 ROOT_PATH_REPLACE=$(subst $(SLASH),$(REPLACE_SLASH),$(ROOT_PATH))
