@@ -237,8 +237,19 @@ class ClusterHandler(object):
                                                  orderer_ports, explorer_ports)
         # update the service port table in db
         for k, v in service_urls.items():
-            service_port = ServicePort(name=k, ip=v.split(":")[0],
-                                       port=int(v.split(":")[1]),
+            ip = v.split(":")[0]
+            port = v.split(":")[1]
+
+            # It is not wrong that some containers maybe 
+            # do not have external ports.
+            # Fabric-sdk-clients should not communicate 
+            # with some containers, for example, zookeeper, kafka.
+            if port == str(None):
+                logger.debug("the service {} port is None".format(k))
+                continue
+
+            service_port = ServicePort(name=k, ip=ip,
+                                       port=int(port),
                                        cluster=cluster)
             service_port.save()
 
