@@ -230,6 +230,7 @@ stop: ##@Service Stop service
 	docker-compose -f ${COMPOSE_FILE} stop
 	echo "Remove all services with ${COMPOSE_FILE}..."
 	docker-compose -f ${COMPOSE_FILE} rm -f -a
+	@$(MAKE) stop-nfs
 
 restart: stop start ##@Service Restart service
 
