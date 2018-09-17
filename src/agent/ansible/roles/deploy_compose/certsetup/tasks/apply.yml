@@ -55,14 +55,14 @@
 
 - name: Rename ca private key
   shell: >-
-    ls *_sk|cat -n|while read n f; do mv "$f" "ca_private.key"; done
+    ls *_sk|cat -n|while read n f; do cp "$f" "ca_private.key"; done
   args:
     chdir: "{{ fabricworkdir }}/keyfiles/{{ item }}/ca"
   with_items: "{{ allorgs }}"
 
 - name: Rename ca tls private key
   shell: >-
-    ls *_sk|cat -n|while read n f; do mv "$f" "tlsca_private.key"; done
+    ls *_sk|cat -n|while read n f; do cp "$f" "tlsca_private.key"; done
   args:
     chdir: "{{ fabricworkdir }}/keyfiles/{{ item }}/tlsca"
   with_items: "{{ allorgs }}"
