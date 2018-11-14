@@ -32,11 +32,17 @@
     repo: "deb [arch={{ arch }}] https://download.docker.com/linux/ubuntu {{ osrelease }} stable"
     state: present
 
+
 - name: Install docker, pip and other tools via apt
   apt:
-    name: "{{ item }}"
-  with_items:
-    - ['python-pip', 'docker-ce', 'libtool', 'libltdl-dev', 'autoconf']
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - python-pip
+    - docker-ce
+    - libtool
+    - libltdl-dev
+    - autoconf
 
 - name: Install python packages
   pip:
