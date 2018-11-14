@@ -27,9 +27,7 @@
 - name: Add Docker offical GPG key
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
-    state: present  
-
-
+    state: present
 
 - name: Add docker-ce repository
   apt_repository:
