@@ -29,6 +29,8 @@
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present  
 
+
+
 - name: Add docker-ce repository
   apt_repository:
     repo: "deb [arch={{ arch }}] https://download.docker.com/linux/ubuntu {{ osrelease }} stable"
