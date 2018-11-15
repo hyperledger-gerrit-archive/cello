@@ -17,22 +17,17 @@
   when: cluster.subnet_id
 
 - name: Retrieve AWS specific image flavor
-  ec2_ami_find:
+  ec2_ami_facts:
     region: "{{ cluster.region_name }}"
-    name: "{{ cluster.image_name }}"
+    filters:
+      name: "{{ cluster.image_name }}"
     aws_access_key: "{{ aws_usr_key }}"
     aws_secret_key: "{{ aws_sec_key }}"
-    virtualization_type: hvm
-    is_public: yes
-    sort: name
-    sort_order: descending
-    sort_end: 4
-    no_result_action: fail
   register: found_amis
 
-- name: Set  ubuntu ami_id
+- name: Set ubuntu_ami_id
   set_fact:
-    ubuntu_ami_id: "{{ (found_amis.results | first).ami_id  }}"
+    ubuntu_ami_id: "{{ found_amis.images[0].image_id }}"
 
 - name: Create a key-pair
   ec2_key:
