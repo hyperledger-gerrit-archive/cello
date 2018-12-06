@@ -98,29 +98,20 @@ WORKER_TYPE ?= docker
 # Specify the running mode, prod or dev
 MODE ?= prod
 ifeq ($(MODE),prod)
-	COMPOSE_FILE=docker-compose-files/docker-compose.yml
+	COMPOSE_FILE=bootup/docker-compose-files/docker-compose.yml
 else
-	COMPOSE_FILE=docker-compose-files/docker-compose-dev.yml
+	COMPOSE_FILE=bootup/docker-compose-files/docker-compose-dev.yml
 endif
 
 
 all: check
-
-build/docker/baseimage/$(DUMMY): build/docker/baseimage/$(DUMMY)
-build/docker/nginx/$(DUMMY): build/docker/nginx/$(DUMMY)
-build/docker/mongo/$(DUMMY): build/docker/mongo/$(DUMMY)
-build/docker/engine/$(DUMMY): build/docker/engine/$(DUMMY)
-build/docker/operator-dashboard/$(DUMMY): build/docker/operator-dashboard/$(DUMMY)
-build/docker/ansible-agent/$(DUMMY): build/docker/ansible-agent/$(DUMMY)
-build/docker/watchdog/$(DUMMY): build/docker/watchdog/$(DUMMY)
-build/docker/user-dashboard/$(DUMMY): build/docker/user-dashboard/$(DUMMY)
 
 build/docker/%/$(DUMMY): ##@Build an image locally
 	$(eval TARGET = ${patsubst build/docker/%/$(DUMMY),%,${@}})
 	$(eval IMG_NAME = $(BASENAME)-$(TARGET))
 	@mkdir -p $(@D)
 	@echo "Building docker $(TARGET)"
-	@cat docker/$(TARGET)/Dockerfile.in \
+	@cat build_image/docker/$(TARGET)/Dockerfile.in \
 		| sed -e 's|_DOCKER_BASE_|$(DOCKER_BASE)|g' \
 		| sed -e 's|_NS_|$(DOCKER_NS)|g' \
 		| sed -e 's|_TAG_|$(IMG_TAG)|g' \
@@ -154,7 +145,7 @@ dockerhub-%: ##@Building latest images with dockerhub materials, to valid them
 	docker build \
 	-t $$IMG \
 	-t $$IMG:x86_64-latest \
-	dockerhub/latest/$$dir
+	build_image/dockerhub/latest/$$dir
 
 dockerhub-pull: ##@Pull service images from dockerhub
 	cd scripts/master_node && bash download_images.sh
@@ -165,7 +156,7 @@ license:
 install: $(patsubst %,build/docker/%/.push,$(DOCKER_IMAGES))
 
 check-js: ##@Code Check check js code format
-	docker-compose -f docker-compose-files/docker-compose-check-js.yaml up
+	docker-compose -f bootup/docker-compose-files/docker-compose-check-js.yaml up
 
 check: setup-master docker-operator-dashboard ##@Code Check code format
 	@$(MAKE) license
@@ -207,7 +198,7 @@ initial-env: ##@Configuration Initial Configuration for dashboard
 	@envsubst < env.tmpl > .env
 
 initial-keycloak:
-	docker-compose -f docker-compose-files/docker-compose-initial.yml up --abort-on-container-exit
+	docker-compose -f bootup/docker-compose-files/docker-compose-initial.yml up --abort-on-container-exit
 
 check-environment:
 	if [ "$(SERVER_PUBLIC_IP)" = "" ]; then \
@@ -253,23 +244,16 @@ build-admin-js: ##@Nodejs Build admin dashboard js files
 	bash scripts/master_node/build_js.sh
 
 build-user-dashboard-js: ##@Nodejs Build user dashboard js files
-	@$(MAKE) -C user-dashboard/ build-js
-
-watch-mode: ##@Nodejs Run watch mode with js files for react
-	bash scripts/master_node/watch_mode.sh
-
-npm-install: ##@Nodejs Install modules with npm package management
-	bash scripts/master_node/npm_install.sh
-#	@$(MAKE) -C user-dashboard/ npm-install
+	@$(MAKE) -C src/user-dashboard/ build-js
 
 help: ##@other Show this help.
 	@perl -e '$(HELP_FUN)' $(MAKEFILE_LIST)
 
 start-nfs: ##@Service start nfs service
-	docker-compose -f docker-compose-files/docker-compose-nfs.yml up -d --no-recreate
+	docker-compose -f bootup/docker-compose-files/docker-compose-nfs.yml up -d --no-recreate
 
 stop-nfs: ##@Service stop nfs service
-	docker-compose -f docker-compose-files/docker-compose-nfs.yml down
+	docker-compose -f bootup/docker-compose-files/docker-compose-nfs.yml down
 
 HELP_FUN = \
 	%help; \
