@@ -54,7 +54,7 @@ else
 endif
 
 # Docker images needed to run cello services
-DOCKER_IMAGES = baseimage engine operator-dashboard ansible-agent watchdog user-dashboard parse-server
+DOCKER_IMAGES = baseimage engine operator-dashboard ansible-agent watchdog user-dashboard parse-server api-engine nginx
 DUMMY = .$(IMG_TAG)
 
 ifeq ($(DOCKER_BASE), )
@@ -163,6 +163,7 @@ check:
 	@$(MAKE) license
 	find ./docs -type f -name "*.md" -exec egrep -l " +$$" {} \;
 	cd src/operator-dashboard && tox && cd ${ROOT_PATH}
+	cd src/api-engine/src && tox && cd ${ROOT_PATH}
 	@$(MAKE) check-js
 	@$(MAKE) test-case
 	MODE=dev SERVER_PUBLIC_IP=0.0.0.0 make start && sleep 60 && MODE=dev make stop
