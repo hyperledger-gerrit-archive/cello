@@ -54,6 +54,7 @@ spec:
         - { name: "ZOO_TICK_TIME", value: "2000" }
         - { name: "ZOO_INIT_LIMIT", value: "10" }
         - { name: "ZOO_SYNC_LIMIT", value: "2" }
+        - { name: "ZOO_LOG4J_PROP", value: "{{fabric.logging_level}},CONSOLE" }
 {% include './resource.j2' %}
 ---
 kind: Service
@@ -86,6 +87,10 @@ spec:
   - name: regcred
 {% endif %}
   restartPolicy: OnFailure
+  volumes:
+    - name: task-pv-storage
+      persistentVolumeClaim:
+        claimName: fabriccerts
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -116,6 +121,10 @@ spec:
 {% endfor %}
 {% endif %}
 {% include './resource.j2' %}
+      volumeMounts:
+        - { mountPath: "/tmp", name: "task-pv-storage",
+            subPath: "kdata{{ kafka }}" }
+
 ---
 kind: Service
 apiVersion: v1
@@ -266,7 +275,6 @@ spec:
       env:
         - { name: "CORE_VM_ENDPOINT", value: "unix:///var/run/docker.sock" }
         - { name: "FABRIC_CFG_PATH", value: "/etc/hyperledger/fabric/artifacts/keyfiles/{{ peer.org }}/peers/{{ peer.name }}.{{ peer.org }}" }
-        - { name: "CORE_LOGGING_LEVEL", value: "{{ fabric.logging_level | default('ERROR') }}" }
         - { name: "CORE_PEER_GOSSIP_USELEADERELECTION",
             value: "{{ allpeers|selectattr('org','equalto',peer.org)|list|selectattr('role','equalto','leader')|list|length|int==0 }}" }
         - { name: "CORE_PEER_GOSSIP_ORGLEADER", value: "{{ (peer.role == "leader") | ternary('true','false') }}" }
@@ -298,6 +306,12 @@ spec:
 {% if fabric.peer_db == 'CouchDB' %}
         - { name: "CORE_LEDGER_STATE_STATEDATABASE", value: "CouchDB" }
         - { name: "CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS", value: "localhost:5984" }
+{% endif %}
+        - { name: "CORE_PEER_FILESYSTEMPATH", value: "/etc/hyperledger/fabric/artifacts/keyfiles/{{ peer.org }}/peers/{{ peer.name }}.{{ peer.org }}/data"}
+{% if project_version is version_compare('1.4.0','>=') or 'stable' in project_version or project_version == 'latest' %}
+        - { name: "FABRIC_LOGGING_SPEC", value: "{{ fabric.logging_level | default('ERROR') }}" }
+{% else %}
+        - { name: "CORE_LOGGING_LEVEL", value: "{{ fabric.logging_level | default('ERROR') }}" }
 {% endif %}
 {% include './resource.j2' %}
       volumeMounts:
@@ -392,6 +406,7 @@ spec:
 {% endif %}
         - { name: "ORDERER_GENERAL_TLS_CLIENTROOTCAS", value: "[{{ rootca | list | join (", ")}}]" }
 {% endif %}
+        - { name: "ORDERER_FILELEDGER_LOCATION", value: "/etc/hyperledger/fabric/artifacts/keyfiles/{{ orderer.org }}/orderers/{{ orderer.name }}.{{ orderer.org }}/data"}
 {% include './resource.j2' %}
       volumeMounts:
         - { mountPath: "/etc/hyperledger/fabric/artifacts", name: "task-pv-storage" }
