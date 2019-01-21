@@ -44,6 +44,9 @@ orderers:
 {% for orderer in allorderers %}
   {{ orderer.name }}:
     url: "{{ tls|ternary('grpcs','grpc') }}://{{ allips|random }}:{{ k8sports[orderer.name+':7050'] }}"
+{% if fabric.metrics is defined and fabric.metrics %}
+    metricsUrl: "http://{{ allips|random }}:{{ k8sports[orderer.name+':8443'] }}"
+{% endif %}
     grpcOptions:
       ssl-target-name-override: "{{ orderer.name }}"
     tlsCACerts:
@@ -54,6 +57,9 @@ peers:
   {{ peer.name }}:
     url: "{{ tls|ternary('grpcs','grpc') }}://{{ allips|random }}:{{ k8sports[peer.name+':7051'] }}"
     eventUrl: "{{ tls|ternary('grpcs','grpc') }}://{{ allips|random }}:{{ k8sports[peer.name+':7053'] }}"
+{% if fabric.metrics is defined and fabric.metrics %}
+    metricsUrl: "http://{{ allips|random }}:{{ k8sports[peer.name+':9443'] }}"
+{% endif %}
     grpcOptions:
       ssl-target-name-override: "{{ peer.name }}"
     tlsCACerts:
@@ -76,6 +82,9 @@ entityMatchers:
     pattern: (\w*){{ orderer.name }}(\w*)
     sslTargetOverrideUrlSubstitutionExp: {{ orderer.name }}
     urlSubstitutionExp: "{{ tls|ternary('grpcs','grpc') }}://{{ allips|random }}:{{ k8sports[orderer.name+':7050'] }}"
+{% if fabric.metrics is defined and fabric.metrics %}
+    metricsUrl: "http://{{ allips|random }}:{{ k8sports[orderer.name+':8443'] }}"
+{% endif %}
 {% endfor %}
   peer:
 {% for peer in allpeers %}
@@ -84,4 +93,7 @@ entityMatchers:
     sslTargetOverrideUrlSubstitutionExp: {{ peer.name }}
     urlSubstitutionExp: "{{ tls|ternary('grpcs','grpc') }}://{{ allips|random }}:{{ k8sports[peer.name+':7051'] }}"
     eventUrlSubstitutionExp: "{{ tls|ternary('grpcs','grpc') }}://{{ allips|random }}:{{ k8sports[peer.name+':7053'] }}"
+{% if fabric.metrics is defined and fabric.metrics %}
+    metricsUrl: "http://{{ allips|random }}:{{ k8sports[peer.name+':9443'] }}"
+{% endif %}
 {% endfor %}
