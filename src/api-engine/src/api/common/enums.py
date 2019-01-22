@@ -108,6 +108,13 @@ class ConsensusPlugin(ExtraEnum):
     Kafka = 1
 
 
+@unique
+class UserRole(ExtraEnum):
+    Administrator = 0
+    Operator = 1
+    User = 2
+
+
 class EnumWithDisplayMeta(EnumMeta):
     def __new__(mcs, name, bases, attrs):
         display_strings = attrs.get("DisplayStrings")
