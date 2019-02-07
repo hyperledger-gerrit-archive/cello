@@ -281,7 +281,6 @@ spec:
         - { name: "CORE_PEER_GOSSIP_USELEADERELECTION",
             value: "{{ allpeers|selectattr('org','equalto',peer.org)|list|selectattr('role','equalto','leader')|list|length|int==0 }}" }
         - { name: "CORE_PEER_GOSSIP_ORGLEADER", value: "{{ (peer.role == "leader") | ternary('true','false') }}" }
-        - { name: "CORE_PEER_PROFILE_ENABLED", value: "true" }
         - { name: "CORE_PEER_TLS_ENABLED", value: "{{ tls | lower }}" }
 {% if tls %}
         - { name: "CORE_PEER_TLS_CERT_FILE", value: "/etc/hyperledger/fabric/artifacts/keyfiles/{{ peer.org }}/peers/{{ peer.name }}.{{ peer.org }}/tls/server.crt" }
@@ -346,8 +345,18 @@ spec:
     port: 7052
   - name: port3
     port: 7053
+{% if fabric.metrics is defined and fabric.metrics %}
   - name: scrapeport
     port: 9443
+{% endif %}
+{% if fabric.peersettings is defined %}
+{% for pkey, pvalue in fabric.peersettings.items() %}
+{% if pkey is CORE_PEER_PROFILE_ENABLED and pvalue is true %}
+  - name: profileport
+    port: 6060
+{% endif %}
+{% endfor %}
+{% endif %}
 {% endfor %}
 {% endif %}
 
@@ -456,7 +465,17 @@ spec:
   ports:
     - name: port1
       port: 7050
+{% if fabric.metrics is defined and fabric.metrics %}
     - name: scrapeport
       port: 8443
+{% endif %}
+% if fabric.orderersettings is defined and fabric.orderersettings.ordererenv is defined %}
+{% for pkey, pvalue in fabric.orderersettings.ordererenv.items() %}
+{% if pkey is ORDERER_GENERAL_PROFILE_ENABLED and pvalue is true %}
+  - name: profileport
+    port: 6060
+{% endif %}
+{% endfor %}
+{% endif %}
 {% endfor %}
 {% endif %}
