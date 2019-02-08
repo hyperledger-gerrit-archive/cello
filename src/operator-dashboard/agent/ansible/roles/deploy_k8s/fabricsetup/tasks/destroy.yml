@@ -8,6 +8,7 @@
   args:
     chdir: "{{ playbook_dir }}/../../vars/"
   when: (allorderers | length > 0) and (allpeers | length > 0)
+  ignore_errors: yes
   tags: "clientdown"
 
 - name: Stop fabric pod and chaincode endpoint daemon set
