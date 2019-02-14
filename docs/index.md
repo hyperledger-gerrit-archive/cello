@@ -25,7 +25,7 @@ Using Cello, blockchain developers can:
 
 ## Operation Guidelines
 * [Terminologies and Concepts](terminology.md)
-* [How to setup Cello](setup.md)
+* [How to setup Cello](setup/setup.md)
 * [Example Adoption Scenarios](scenario.md)
 * [Manage Cello services](service_management.md)
 * [Use the Operator Dashboard](dashboard_operator.md)
