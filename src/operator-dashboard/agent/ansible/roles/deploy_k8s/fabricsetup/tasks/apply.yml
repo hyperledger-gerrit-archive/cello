@@ -271,7 +271,7 @@
 
 - name: Download chaincode container image
   command: >-
-    ./kubectl --kubeconfig kubeconfig exec {{ item }} --
+    ./kubectl --kubeconfig kubeconfig exec {{ item }} -- 
     docker pull {{ fabric.repo.url }}fabric-ccenv:{{ fabric.baseimage_tag }}
   args:
     chdir: "{{ playbook_dir }}/../../vars/"
