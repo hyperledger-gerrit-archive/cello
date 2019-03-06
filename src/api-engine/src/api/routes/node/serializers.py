@@ -17,8 +17,53 @@ from api.models import Node
 LOG = logging.getLogger(__name__)
 
 
-class NodeQuery(PageQuerySerializer):
-    pass
+class NodeQuery(PageQuerySerializer, serializers.ModelSerializer):
+    agent_id = serializers.UUIDField(
+        help_text="Agent ID, only operator can use this field",
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = Node
+        fields = (
+            "page",
+            "per_page",
+            "type",
+            "name",
+            "network_type",
+            "network_version",
+            "agent_id",
+        )
+        extra_kwargs = {"type": {"required": False}}
+
+
+class NodeInListSerializer(serializers.ModelSerializer):
+    agent_id = serializers.UUIDField(
+        help_text="Agent ID", required=False, allow_null=True
+    )
+    network_id = serializers.UUIDField(
+        help_text="Network ID", required=False, allow_null=True
+    )
+
+    class Meta:
+        model = Node
+        fields = (
+            "type",
+            "name",
+            "network_type",
+            "network_version",
+            "created_at",
+            "agent_id",
+            "network_id",
+        )
+
+
+class NodeListSerializer(serializers.Serializer):
+    data = NodeInListSerializer(many=True, help_text="Nodes list")
+    total = serializers.IntegerField(
+        help_text="Total number of node", min_value=0
+    )
 
 
 class NodeCreateBody(serializers.ModelSerializer):
