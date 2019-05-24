@@ -26,6 +26,7 @@ check_license.sh
 .svg$
 .tx$
 .txt
+.j2
 ^build
 ^vendor
 agent
