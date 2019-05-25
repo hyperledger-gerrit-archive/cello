@@ -37,6 +37,7 @@ export default [
           },
           {
             path: '/operator/organization',
+            authority: ['operator'],
             name: 'organization',
             component: './Operator/Organization',
           },

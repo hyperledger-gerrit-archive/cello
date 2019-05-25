@@ -5,6 +5,7 @@ import menu from './en-US/menu';
 import pwa from './en-US/pwa';
 import component from './en-US/component';
 import operatorOrganization from './en-US/operatorOrganization';
+import operatorUser from './en-US/operatorUser';
 import form from './en-US/form';
 
 export default {
@@ -23,5 +24,6 @@ export default {
   ...pwa,
   ...component,
   ...operatorOrganization,
+  ...operatorUser,
   ...form,
 };

@@ -5,7 +5,7 @@ import { Card, Button, Form, Modal, Input, message, Divider } from 'antd';
 import moment from 'moment';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import StandardTable from '@/components/StandardTable';
-import styles from './Organization.less';
+import styles from './styles.less';
 
 const FormItem = Form.Item;
 
