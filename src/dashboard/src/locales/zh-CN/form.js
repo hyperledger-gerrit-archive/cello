@@ -6,4 +6,5 @@ export default {
   'form.menu.item.update': '更新',
   'form.button.confirm': '确认',
   'form.button.cancel': '取消',
+  'form.button.moreActions': '更多操作',
 };

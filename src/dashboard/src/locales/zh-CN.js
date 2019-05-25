@@ -5,6 +5,7 @@ import menu from './zh-CN/menu';
 import pwa from './zh-CN/pwa';
 import component from './zh-CN/component';
 import operatorOrganization from './zh-CN/operatorOrganization';
+import operatorUser from './zh-CN/operatorUser';
 import form from './zh-CN/form';
 
 export default {
@@ -23,5 +24,6 @@ export default {
   ...pwa,
   ...component,
   ...operatorOrganization,
+  ...operatorUser,
   ...form,
 };

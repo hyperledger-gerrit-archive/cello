@@ -6,4 +6,5 @@ export default {
   'form.menu.item.update': 'Update',
   'form.button.confirm': 'Confirm',
   'form.button.cancel': 'Cancel',
+  'form.button.moreActions': 'More Actions',
 };
