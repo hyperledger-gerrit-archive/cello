@@ -29,6 +29,7 @@ from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token
 from api.routes.network.views import NetworkViewSet
 from api.routes.agent.views import AgentViewSet
 from api.routes.node.views import NodeViewSet
+from api.routes.peer.views import PeerViewSet
 from api.routes.organization.views import OrganizationViewSet
 from api.routes.user.views import UserViewSet
 from api.routes.file.views import FileViewSet
@@ -57,6 +58,7 @@ router = DefaultRouter(trailing_slash=False)
 router.register("networks", NetworkViewSet, base_name="network")
 router.register("agents", AgentViewSet, base_name="agent")
 router.register("nodes", NodeViewSet, base_name="node")
+router.register("peers", PeerViewSet, base_name="peer")
 router.register("organizations", OrganizationViewSet, base_name="organization")
 router.register("users", UserViewSet, base_name="user")
 router.register("files", FileViewSet, base_name="file")
