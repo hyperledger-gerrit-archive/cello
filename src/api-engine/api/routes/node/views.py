@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from api.common.enums import NodeStatus
+from api.common.enums import NodeStatus, FabricNodeType
 from api.exceptions import CustomError, NoResource
 from api.exceptions import ResourceNotFound
 from api.models import Agent, Node
@@ -189,6 +189,131 @@ class NodeViewSet(viewsets.ViewSet):
         except ObjectDoesNotExist:
             raise ResourceNotFound
         else:
+            if node.status != NodeStatus.Deleting.name.lower():
+                if node.status != NodeStatus.Error.name.lower():
+                    node.status = NodeStatus.Deleting.name.lower()
+                    node.save()
+
+                    delete_node.delay(str(node.id))
+                else:
+                    node.delete()
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PeerViewSet(viewsets.ViewSet):
+    authentication_classes = (JSONWebTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    @staticmethod
+    def _validate_organization(request):
+        if request.user.organization is None:
+            raise CustomError(detail="Need join in organization.")
+
+    @swagger_auto_schema(
+        query_serializer=NodeQuery,
+        responses=with_common_response(
+            with_common_response({status.HTTP_200_OK: NodeListSerializer})
+        ),
+    )
+    def list(self, request, *args, **kwargs):
+        """
+        List Peers
+
+        Filter Peers with query parameters.
+        """
+        serializer = NodeQuery(data=request.GET)
+        if serializer.is_valid(raise_exception=True):
+            page = serializer.validated_data.get("page")
+            per_page = serializer.validated_data.get("per_page")
+            name = serializer.validated_data.get("name")
+            network_type = serializer.validated_data.get("network_type")
+            network_version = serializer.validated_data.get("network_version")
+            agent_id = serializer.validated_data.get("agent_id")
+
+            if agent_id is not None and not request.user.is_operator:
+                raise PermissionDenied
+            query_filter = {}
+            query_filter.update({"type": FabricNodeType.Peer.name.lower()})
+
+            if name:
+                query_filter.update({"name__icontains": name})
+            if network_type:
+                query_filter.update({"network_type": network_type})
+            if network_version:
+                query_filter.update({"network_version": network_version})
+            if request.user.is_administrator:
+                query_filter.update(
+                    {"organization": request.user.organization}
+                )
+            elif request.user.is_common_user:
+                query_filter.update({"user": request.user})
+            if agent_id:
+                query_filter.update({"agent__id": agent_id})
+            nodes = Node.objects.filter(**query_filter)
+            p = Paginator(nodes, per_page)
+            nodes = p.page(page)
+            nodes = [node.__dict__ for node in nodes]
+
+            response = NodeListSerializer(
+                data={"total": p.count, "data": nodes}
+            )
+            if response.is_valid(raise_exception=True):
+                return Response(
+                    data=response.validated_data, status=status.HTTP_200_OK
+                )
+
+    @swagger_auto_schema(
+        request_body=NodeCreateBody,
+        responses=with_common_response(
+            {status.HTTP_201_CREATED: NodeIDSerializer}
+        ),
+    )
+    def create(self, request):
+        """
+        Create Peer
+
+        Create peer
+        """
+        pass
+
+    @swagger_auto_schema(
+        methods=["post"],
+        query_serializer=NodeOperationSerializer,
+        responses=with_common_response({status.HTTP_202_ACCEPTED: "Accepted"}),
+    )
+    @action(methods=["post"], detail=True, url_path="operations")
+    def operate(self, request, pk=None):
+        """
+        Operate Peer
+
+        Do some operation on peer, start/stop/restart
+        """
+        pass
+
+    @swagger_auto_schema(
+        responses=with_common_response(
+            {status.HTTP_204_NO_CONTENT: "No Content"}
+        )
+    )
+    def destroy(self, request, pk=None):
+        """
+        Delete Peer
+
+        Delete Peer
+        """
+        try:
+            if request.user.is_superuser:
+                node = Node.objects.get(id=pk)
+            else:
+                node = Node.objects.get(
+                    id=pk, organization=request.user.organization
+                )
+        except ObjectDoesNotExist:
+            raise ResourceNotFound
+        else:
+            if node.type != FabricNodeType.Peer.name.lower():
+                raise CustomError(detail="Not peer node")
             if node.status != NodeStatus.Deleting.name.lower():
                 if node.status != NodeStatus.Error.name.lower():
                     node.status = NodeStatus.Deleting.name.lower()
