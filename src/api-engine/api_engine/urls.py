@@ -28,7 +28,7 @@ from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token
 
 from api.routes.network.views import NetworkViewSet
 from api.routes.agent.views import AgentViewSet
-from api.routes.node.views import NodeViewSet
+from api.routes.node.views import NodeViewSet, PeerViewSet
 from api.routes.organization.views import OrganizationViewSet
 from api.routes.user.views import UserViewSet
 from api.routes.file.views import FileViewSet
