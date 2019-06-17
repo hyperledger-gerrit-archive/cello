@@ -4,6 +4,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import logging
+import os
 
 import docker
 from django.core.exceptions import ObjectDoesNotExist
@@ -13,6 +14,7 @@ from api.models import Node, Port
 from api_engine.celery import app
 
 LOG = logging.getLogger(__name__)
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN")
 
 
 @app.task(bind=True, default_retry_delay=5, max_retries=3, time_limit=360)
@@ -34,11 +36,13 @@ def create_node(self, node_id=None, agent_image=None, **kwargs):
             "AGENT_ID": str(node.agent.id),
             "AGENT_CONFIG_FILE": agent_config_file,
             "NODE_UPDATE_URL": node_update_api,
-            "OPERATION": AgentOperation.Start,
+            # Token for call update node api
+            "TOKEN": ADMIN_TOKEN,
+            "OPERATION": AgentOperation.Start.value,
         }
         client = docker.from_env()
         client.containers.run(
-            agent_image, auto_remove=True, environment=environment, detach=True
+            agent_image, environment=environment, detach=True
         )
     except ObjectDoesNotExist:
         return False
