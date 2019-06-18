@@ -9,6 +9,7 @@ export default {
   'menu.operator.agent': 'Agent',
   'menu.operator.organization': 'Organization',
   'menu.operator.userManagement': 'User Management',
+  'menu.operator.node': 'Node',
   'menu.exception': 'Exception',
   'menu.exception.not-permission': '403',
   'menu.exception.not-find': '404',

@@ -9,6 +9,7 @@ export default {
   'menu.operator.agent': '代理',
   'menu.operator.organization': '组织',
   'menu.operator.userManagement': '用户管理',
+  'menu.operator.node': '节点',
   'menu.exception': '异常页',
   'menu.exception.not-permission': '403',
   'menu.exception.not-find': '404',
