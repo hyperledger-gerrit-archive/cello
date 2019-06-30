@@ -43,14 +43,7 @@ class Agent extends PureComponent {
   }
 
   onAddAgent = () => {
-    this.props.dispatch(
-      routerRedux.push({
-        pathname: '/operator/agent/newAgent',
-        search: stringify({
-          action: 'create',
-        }),
-      })
-    );
+
   };
 
   createCallback = data => {
@@ -116,15 +109,11 @@ class Agent extends PureComponent {
     }
   };
 
-  handleTableChange = pagination => {
-    const { dispatch } = this.props;
-    const { formValues } = this.state;
-    const { current, pageSize } = pagination;
-    console.log('pagination', pagination);
+  handleTableChange = (page) => {
+    const { dispatch, agent: { pagination } } = this.props;
     const params = {
-      page: current,
-      per_page: pageSize,
-      ...formValues,
+      page: page,
+      per_page: pagination.pageSize,
     };
     dispatch({
       type: 'agent/listAgent',
@@ -133,18 +122,14 @@ class Agent extends PureComponent {
   };
 
   editAgent = agent => {
-    this.props.dispatch(
-      routerRedux.push({
-        pathname: '/operator/agent/newAgent',
-        search: stringify({
-          action: 'edit',
-          id: agent.id
-        }),
-      })
-    );
+
   };
 
   nodeList = agent => {
+
+  };
+
+  handleDelete = agent => {
 
   };
 
@@ -178,6 +163,9 @@ class Agent extends PureComponent {
     const paginationProps = {
       showQuickJumper: true,
       total: pagination.total,
+      pageSize: pagination.pageSize,
+      currentPage: pagination.current,
+      onChange: this.handleTableChange
     };
 
     const ListContent = ({ data: { type, created_at, status } }) => (
@@ -244,7 +232,7 @@ class Agent extends PureComponent {
                       <div>
                         <p>{item.worker_api}</p>
                         <p>
-                          <FormattedMessage id="app.operator.agent.ListItem.organization" defaultMessage="Organization" />{' : '}
+                          <FormattedMessage id="app.operator.agent.listItem.organization" defaultMessage="Organization" />{' : '}
                           {filterOrgName(item.organization_id)}
                         </p>
                       </div>

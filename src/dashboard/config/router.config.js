@@ -48,13 +48,13 @@ export default [
             path: '/operator/agent',
             name: 'agent',
             component: './Operator/Agent/Agent',
-          },
+          },/*
           {
             path: '/operator/agent/newAgent',
-            name: 'agent',
+            name: 'newAgent',
             component: './Operator/Agent/NewAgent',
             hideInMenu: true
-          },
+          },*/
           {
             path: '/operator/userManagement',
             name: 'userManagement',

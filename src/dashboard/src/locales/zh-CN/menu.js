@@ -7,6 +7,7 @@ export default {
   'menu.operator': '管理员',
   'menu.operator.overview': '概况',
   'menu.operator.agent': '代理',
+  'menu.operator.newAgent': '新建代理',
   'menu.operator.organization': '组织',
   'menu.operator.userManagement': '用户管理',
   'menu.operator.node': '节点',

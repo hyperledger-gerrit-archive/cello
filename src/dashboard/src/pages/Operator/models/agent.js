@@ -76,7 +76,7 @@ export default {
     },
     clear() {
       return {
-        Agents: [],
+        agents: [],
         pagination: {
           total: 0,
           current: 1,
