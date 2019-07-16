@@ -8,7 +8,7 @@ export async function listAgent(params) {
 export async function createAgent(params) {
   return request('/api/agents', {
     method: 'POST',
-    data: params,
+    data: params
   });
 }
 

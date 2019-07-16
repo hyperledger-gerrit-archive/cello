@@ -25,6 +25,7 @@ export default {
       const pageSize = payload ? payload.per_page || pagination.pageSize : pagination.pageSize;
       const current = payload ? payload.page || pagination.current : pagination.current;
 
+      console.log('callback', callback);
       pagination.total = response.total;
       pagination.pageSize = pageSize;
       pagination.current = current;
@@ -40,7 +41,7 @@ export default {
       }
     },
     *createAgent({ payload, callback }, { call }) {
-      const response = yield call(createAgent, payload);
+      const response = yield call(createAgent, payload.formData);
       if (callback) {
         callback({
           payload,
