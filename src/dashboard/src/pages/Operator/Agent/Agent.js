@@ -7,6 +7,7 @@ import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import styles from '../styles.less';
 import { routerRedux } from 'dva/router';
 import { stringify } from 'qs';
+import { getAuthority } from '@/utils/authority';
 
 @connect(({agent, organization, loading}) => ({
   agent,
@@ -15,13 +16,17 @@ import { stringify } from 'qs';
 }))
 
 class Agent extends PureComponent {
-  state = {
-    modalVisible: false,
-    modalMethod: 'create',
-    selectedRows: [],
-    formValues: {},
-    currentOrganization: {},
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      modalVisible: false,
+      modalMethod: 'create',
+      selectedRows: [],
+      formValues: {},
+      currentOrganization: {},
+      userRole: getAuthority(),
+    };
+  }
 
   componentDidMount() {
     const { dispatch } = this.props;
