@@ -1,0 +1,44 @@
+apiVersion: app.example.com/v1alpha1
+kind: Peers
+metadata:
+  name: envar-demo1
+spec:
+  metadata:
+    name: hyperledger-peer
+    labels:
+      app: hyperledger
+      role: peer
+      peerId: "1"
+      org: "1"
+  replicas: 2
+  restartPolicy: Always
+  containers:
+    - name: envar-demo-container
+      imagePullPolicy: IfNotPresent
+      image: hyperledger/fabric-peer:x86_64-1.0.0
+      workingDir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+      volumeMounts:
+        - mountPath: /shared/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp/
+          name: sharedvolume
+      env:
+        - name: CORE_VM_ENDPOINT
+          value: unix:///host/var/run/docker.sock
+        - name: CORE_PEER_ID
+          value: "peer0-org1"
+        - name: CORE_PEER_ADDRESS
+          value: "peer0-org1:7051"
+        - name: CORE_PEER_TLS_ROOTCERT_FILE
+          value: "/etc/hyperledger/fabric/tls/ca.crt"
+      ports:
+        - containerPort: 7051
+        - containerPort: 7052
+        - containerPort: 7053
+        - containerPort: 8000
+      command:
+        - peer
+        - node
+        - start
+  volumes:
+    - name: sharedvolume
+      persistentVolumeClaim:
+        claimName: shared-pvc
