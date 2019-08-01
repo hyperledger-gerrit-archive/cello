@@ -14,8 +14,8 @@ spec:
   restartPolicy: Never
   volumes:
     - name: varrun
-      hostPath:
-        path: /var/run
+      emptyDir:
+        medium: Memory
     - name: task-pv-storage
       persistentVolumeClaim:
         claimName: fabriccerts

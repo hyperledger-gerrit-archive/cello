@@ -32,6 +32,5 @@ spec:
       - name: varlibdocker
         emptyDir: {}
       - name: rundind
-        hostPath:
-          path: /var/run/dind/
-
+        emptyDir:
+          medium: Memory
