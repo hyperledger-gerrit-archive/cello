@@ -136,6 +136,9 @@ build/docker/%/.push: build/docker/%/$(DUMMY)
 
 docker: $(patsubst %,build/docker/%/$(DUMMY),$(DOCKER_IMAGES)) ##@Generate docker images locally
 
+docker-%:
+	@$(MAKE) build/docker/$*/$(DUMMY)
+
 docker-operator-dashboard: build/docker/dashboard/$(DUMMY)
 
 docker-clean: stop image-clean ##@Clean all existing images
