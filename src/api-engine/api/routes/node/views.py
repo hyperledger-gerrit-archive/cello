@@ -479,7 +479,7 @@ class NodeViewSet(viewsets.ViewSet):
             node.links = [
                 {
                     "internal_port": port.internal,
-                    "url": "%s:%s" % (server_host, port.external),
+                    "url": "%s:%s" % (node.agent.ip, port.external),
                 }
                 for port in ports
             ]
