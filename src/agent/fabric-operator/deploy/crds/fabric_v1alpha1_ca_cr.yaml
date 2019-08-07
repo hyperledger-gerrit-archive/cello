@@ -1,0 +1,7 @@
+apiVersion: fabric.hyperledger.org/v1alpha1
+kind: CA
+metadata:
+  name: example-ca
+spec:
+  # Add fields here
+  size: 3
