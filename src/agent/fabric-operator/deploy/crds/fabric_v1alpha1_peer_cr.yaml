@@ -1,0 +1,7 @@
+apiVersion: fabric.hyperledger.org/v1alpha1
+kind: Peer
+metadata:
+  name: example-peer
+spec:
+  # Add fields here
+  size: 3

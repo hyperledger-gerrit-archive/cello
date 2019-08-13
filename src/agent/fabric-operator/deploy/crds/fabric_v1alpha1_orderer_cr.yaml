@@ -1,0 +1,7 @@
+apiVersion: fabric.hyperledger.org/v1alpha1
+kind: Orderer
+metadata:
+  name: example-orderer
+spec:
+  # Add fields here
+  size: 3
