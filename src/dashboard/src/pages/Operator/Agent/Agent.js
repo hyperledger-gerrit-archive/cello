@@ -339,8 +339,8 @@ class Agent extends PureComponent {
           <Col span={10}>
             <p>
               <FormattedMessage
-                id="app.operator.agent.table.header.createTime"
-                defaultMessage="Create Time"
+                id="app.operator.agent.table.header.creationTime"
+                defaultMessage="Creation Time"
               />
             </p>
             <p>{moment(createdAt).format('YYYY-MM-DD HH:mm:ss')}</p>
