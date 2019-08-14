@@ -1,30 +1,21 @@
-import {
-  listAgent,
-  getAgent,
-  createAgent,
-  updateAgent,
-  deleteAgent,
-  applyAgent,
-  releaseAgent,
-} from '@/services/agent';
+import { listNode, getNode, registerUserToNode, deleteNode, operateNode } from '@/services/node';
 
 export default {
-  namespace: 'agent',
+  namespace: 'node',
 
   state: {
-    agent: {},
-    agents: [],
+    node: {},
+    nodes: [],
     pagination: {
       total: 0,
       current: 1,
       pageSize: 10,
     },
-    currentAgent: {},
   },
 
   effects: {
-    *listAgent({ payload, callback }, { call, put, select }) {
-      const pagination = yield select(state => state.agent.pagination);
+    *listNode({ payload, callback }, { call, put, select }) {
+      const pagination = yield select(state => state.node.pagination);
       const pageSize = payload ? payload.per_page || pagination.pageSize : pagination.pageSize;
       const current = payload ? payload.page || pagination.current : pagination.current;
       const params = {
@@ -32,7 +23,7 @@ export default {
         page: current,
         per_page: pageSize,
       };
-      const response = yield call(listAgent, params);
+      const response = yield call(listNode, params);
 
       pagination.total = response.total;
       pagination.pageSize = pageSize;
@@ -41,19 +32,19 @@ export default {
         type: 'save',
         payload: {
           pagination,
-          agents: response.data,
+          nodes: response.data,
         },
       });
       if (callback) {
         callback();
       }
     },
-    *getAgent({ payload, callback }, { call, put }) {
-      const response = yield call(getAgent, payload);
+    *getNode({ payload, callback }, { call, put }) {
+      const response = yield call(getNode, payload);
       yield put({
         type: 'save',
         payload: {
-          agent: response,
+          node: response,
         },
       });
       if (callback) {
@@ -62,8 +53,8 @@ export default {
         });
       }
     },
-    *createAgent({ payload, callback }, { call }) {
-      const response = yield call(createAgent, payload.formData);
+    *registerUserToNode({ payload, callback }, { call }) {
+      const response = yield call(registerUserToNode, payload);
       if (callback) {
         callback({
           payload,
@@ -71,8 +62,8 @@ export default {
         });
       }
     },
-    *applyAgent({ payload, callback }, { call }) {
-      const response = yield call(applyAgent, payload);
+    *deleteNode({ payload, callback }, { call }) {
+      const response = yield call(deleteNode, payload);
       if (callback) {
         callback({
           payload,
@@ -80,26 +71,8 @@ export default {
         });
       }
     },
-    *updateAgent({ payload, callback }, { call }) {
-      const response = yield call(updateAgent, payload);
-      if (callback) {
-        callback({
-          payload,
-          ...response,
-        });
-      }
-    },
-    *deleteAgent({ payload, callback }, { call }) {
-      const response = yield call(deleteAgent, payload);
-      if (callback) {
-        callback({
-          payload,
-          ...response,
-        });
-      }
-    },
-    *releaseAgent({ payload, callback }, { call }) {
-      const response = yield call(releaseAgent, payload);
+    *operateNode({ payload, callback }, { call }) {
+      const response = yield call(operateNode, payload);
       if (callback) {
         callback({
           payload,
@@ -117,14 +90,13 @@ export default {
     },
     clear() {
       return {
-        agent: {},
-        agents: [],
+        node: {},
+        nodes: [],
         pagination: {
           total: 0,
           current: 1,
           pageSize: 10,
         },
-        currentAgent: {},
       };
     },
   },
