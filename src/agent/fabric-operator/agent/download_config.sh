@@ -1,12 +1,12 @@
-#!/bin/bash
+#!/bin/sh
 echo "Getting Kubernetes Agent Config"
 
 #Get kubernetes config file
 wget $AGENT_CONFIG_FILE -P /tmp
 CONFIG_FILE=$(basename $AGENT_CONFIG_FILE)
-if [ ${file: -4} == ".zip" ]
+if [ ${CONFIG_FILE: -4} == ".zip" ]
 then
-  unzip $CONFIG_FILE -d /app
+  unzip /tmp/$CONFIG_FILE -d $HOME/
 else
-  mkdir /app/.kube && mv $CONFIG_FILE /app/.kube/
+  mkdir $HOME/.kube/ && mv /tmp/$CONFIG_FILE $HOME/.kube/
 fi

@@ -7,11 +7,13 @@ mv kubectl /usr/local/bin/kubectl && \
 apk update && \
 apk add jq gettext curl
 
-COPY deploy/ /app/deploy
-COPY agent/ /app
+ENV HOME /home
 
-WORKDIR /app
+COPY deploy/ /home/app/deploy
+COPY agent/ /home/app
 
-ENV KUBECONFIG /app/.kube/config
+WORKDIR /home/app
 
-CMD sh /app/deploy_cr.sh
+ENV KUBECONFIG /home/.kube/config
+
+CMD sh /home/app/deploy_cr.sh
