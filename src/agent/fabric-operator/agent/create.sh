@@ -1,28 +1,11 @@
 #!/bin/sh
-echo "Starting cr generation"
-
-#Download kubernetes config
-source download_config.sh
-
-#Check if the namespace exists
-NAMESPACE_EXISTS=`kubectl get namespaces | grep $AGENT_ID`
-
-#Create a namespace if it doesn't exists
-if [ -z "$NAMESPACE_EXISTS" ]
-then
-      kubectl create namespace $AGENT_ID
-fi
-
-CURRENT_NAMESPACE=$AGENT_ID
-
-#Set namespace as default for current context
-kubectl config set-context --current --namespace=$CURRENT_NAMESPACE
+echo "Creating Node"
 
 TYPE_OF_NODE=$NODE_TYPE
 
 if [ $TYPE_OF_NODE =  "ca" ]
 then
-  CR_NAME=fabric-ca-server
+  CR_NAME="deploy-"${NODE_ID}
   kubectl apply -f deploy/crds/fabric_v1alpha1_ca_crd.yaml
   cat > cr_config.yaml << EOL
 apiVersion: fabric.hyperledger.org/v1alpha1
@@ -47,7 +30,7 @@ EOL
 
 elif [ $TYPE_OF_NODE = "peer" ]
 then
-  CR_NAME=peer
+  CR_NAME="deploy-"${NODE_ID}
   kubectl apply -f deploy/crds/fabric_v1alpha1_peer_crd.yaml
   cat > cr_config.yaml << EOL
 apiVersion: fabric.hyperledger.org/v1alpha1
@@ -67,7 +50,7 @@ EOL
 
 elif [ $TYPE_OF_NODE = "orderer" ]
 then
-  CR_NAME=orderer
+  CR_NAME="deploy-"${NODE_ID}
   kubectl apply -f deploy/crds/fabric_v1alpha1_orderer_crd.yaml
   cat > cr_config.yaml << EOL
 apiVersion: fabric.hyperledger.org/v1alpha1
