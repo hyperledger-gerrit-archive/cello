@@ -7,8 +7,19 @@ spec:
   storageSize: "1Gi"
   storageClass: "default"
   image: "hyperledger/fabric-peer:1.4.1"
-
-  # To specify resource limits for this Peer node,
+  certs:
+    tlsCerts:
+      tlsKey: dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=
+      tlsCert: dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=
+      tlsRootcert: dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=
+    msp:
+      adminCerts: [dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=,dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=]
+      caCerts: [dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=,dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=]
+      keyStore: dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU
+      signCerts: dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU
+      tlsCacerts: [dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=,dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=]
+      tlsIntermediatecerts: [dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=,dGhpcyBpcyBteSBrZXkgZm9yIHRoZSBwZWVyIG5vZGU=]
+# To specify resource limits for this Peer node,
   # use kubernetes resource requirements spec
   # resources:
   #   requests:
@@ -18,7 +29,7 @@ spec:
   #     memory: "1024mi"
   #     cpu: "250"
 
-  # Add all the configurable peer parameters as 
+  # Add all the configurable peer parameters as
   # name-value pairs
   configParams:
     - name: CORE_PEER_ADDRESSAUTODETECT
@@ -37,4 +48,5 @@ spec:
       value: blockchain-org1peer1:30110
     - name: CORE_PEER_GOSSIP_ORGLEADER
       value: "false"
-  
+    - name: CORE_PEER_TLS_ENABLED
+      value: "true"

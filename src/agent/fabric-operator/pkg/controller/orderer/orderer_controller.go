@@ -3,6 +3,8 @@ package orderer
 import (
 	"context"
 	"strconv"
+	"strings"
+	"time"
 
 	fabric "github.com/hyperledger/cello/src/agent/fabric-operator/pkg/apis/fabric"
 	fabricv1alpha1 "github.com/hyperledger/cello/src/agent/fabric-operator/pkg/apis/fabric/v1alpha1"
@@ -12,6 +14,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+<<<<<<< Updated upstream
+	"k8s.io/client-go/kubernetes"
+=======
+>>>>>>> Stashed changes
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -63,6 +71,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// Watch for changes to secret that we create
+	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &fabricv1alpha1.CA{},
+	})
+	if err != nil {
+		return err
+	}
+
 	// Watch for changes to services that we create
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
@@ -84,6 +101,7 @@ type ReconcileOrderer struct {
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
+	kubeconfig *rest.Config
 }
 
 // Reconcile reads that state of the cluster for a Orderer object and makes changes based on the state read
@@ -117,6 +135,33 @@ func (r *ReconcileOrderer) Reconcile(request reconcile.Request) (reconcile.Resul
 		// Error reading the object - requeue the request.
 		reqLogger.Error(err, "Failed to get Orderer.")
 		return reconcile.Result{}, err
+	}
+
+<<<<<<< Updated upstream
+=======
+	secret := &corev1.Secret{}
+>>>>>>> Stashed changes
+	secretID := request.Name + "-secret"
+	foundSecret := &corev1.Secret{}
+	err = r.client.Get(context.TODO(),
+		types.NamespacedName{Name: secretID, Namespace: request.Namespace},
+		foundSecret)
+	if err != nil && errors.IsNotFound(err) {
+<<<<<<< Updated upstream
+		secret := r.newSecretForCR(instance, request)
+		err = r.client.Create(context.TODO(), secret)
+		if err != nil {
+			reqLogger.Error(err, "Failed to retrieve Fabric Orderer secrets")
+=======
+		secret = r.newSecretForCR(instance, request)
+		err = r.client.Create(context.TODO(), secret)
+		if err != nil {
+			reqLogger.Error(err, "Failed to retrieve Fabric Peer secrets")
+>>>>>>> Stashed changes
+			return reconcile.Result{}, err
+		}
+		// When we reach here, it means that we have created the secret successfully
+		// and ready to do more
 	}
 
 	foundService := &corev1.Service{}
@@ -170,7 +215,7 @@ func (r *ReconcileOrderer) Reconcile(request reconcile.Request) (reconcile.Resul
 	err = r.client.Get(context.TODO(), request.NamespacedName, foundSTS)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new StatefulSet object
-		sts := r.newSTSForCR(instance, request)
+		sts := r.newSTSForCR(secret, instance, request)
 		reqLogger.Info("Creating a new set.", "StatefulSet.Namespace", sts.Namespace,
 			"StatefulSet.Name", sts.Name)
 		err = r.client.Create(context.TODO(), sts)
@@ -185,6 +230,57 @@ func (r *ReconcileOrderer) Reconcile(request reconcile.Request) (reconcile.Resul
 	}
 
 	return reconcile.Result{}, nil
+}
+
+// newSecretForCR returns k8s secret with the name + "-secret" /namespace as the cr
+<<<<<<< Updated upstream
+func (r *ReconcileCA) newSecretForCR(cr *fabricv1alpha1.Orderer, request reconcile.Request) *corev1.Secret {
+=======
+func (r *ReconcileOrderer) newSecretForCR(cr *fabricv1alpha1.Orderer, request reconcile.Request) *corev1.Secret {
+>>>>>>> Stashed changes
+	obj, _, _ := fabric.GetObjectFromTemplate("orderer/orderer_secret.yaml")
+	secret, ok := obj.(*corev1.Secret)
+	if !ok {
+		secret = nil
+	} else {
+		secret.Name = request.Name + "-secret"
+		secret.Namespace = request.Namespace
+		if cr.Spec.Certs != nil {
+<<<<<<< Updated upstream
+			secret.Data["cert"] = []byte(cr.Spec.Certs.Cert)
+			secret.Data["key"] = []byte(cr.Spec.Certs.Key)
+			secret.Data["tlsCert"] = []byte(cr.Spec.Certs.TLSCert)
+			secret.Data["tlsKey"] = []byte(cr.Spec.Certs.TLSKey)
+=======
+			for i, adminCert := range cr.Spec.Certs.Msp.AdminCerts {
+				secret.Data["adminCert-"+strconv.Itoa(i)] = []byte(adminCert)
+			}
+			for i, caCert := range cr.Spec.Certs.Msp.CaCerts {
+				secret.Data["caCert-"+strconv.Itoa(i)] = []byte(caCert)
+			}
+			secret.Data["keyStore"] = []byte(cr.Spec.Certs.Msp.KeyStore)
+			secret.Data["signCerts"] = []byte(cr.Spec.Certs.Msp.SignCerts)
+			for i, tlsCacerts := range cr.Spec.Certs.Msp.TLSCacerts {
+				secret.Data["tlsCacerts-"+strconv.Itoa(i)] = []byte(tlsCacerts)
+			}
+		}
+		value := ""
+		for _, param := range cr.Spec.ConfigParams {
+			if param.Name == "CORE_PEER_TLS_ENABLED" {
+				value = param.Value
+			}
+		}
+		if value != "" && value == "true" && cr.Spec.Certs.TLSCerts != nil {
+			secret.Data["tlsPrivatekey"] = []byte(cr.Spec.Certs.TLSCerts.TLSPrivatekey)
+			secret.Data["tlsCert"] = []byte(cr.Spec.Certs.TLSCerts.TLSCert)
+			for i, tlsRootcas := range cr.Spec.Certs.TLSCerts.TLSRootcas {
+				secret.Data["tlsRootcas-"+strconv.Itoa(i)] = []byte(tlsRootcas)
+			}
+>>>>>>> Stashed changes
+		}
+		controllerutil.SetControllerReference(cr, secret, r.scheme)
+	}
+	return secret
 }
 
 // newServiceForCR returns a fabric Orderer service with the same name/namespace as the cr
@@ -204,7 +300,7 @@ func (r *ReconcileOrderer) newServiceForCR(cr *fabricv1alpha1.Orderer, request r
 }
 
 // newPodForCR returns a fabric Orderer statefulset with the same name/namespace as the cr
-func (r *ReconcileOrderer) newSTSForCR(cr *fabricv1alpha1.Orderer, request reconcile.Request) *appsv1.StatefulSet {
+func (r *ReconcileOrderer) newSTSForCR(secret *corev1.Secret, cr *fabricv1alpha1.Orderer, request reconcile.Request) *appsv1.StatefulSet {
 	obj, _, err := fabric.GetObjectFromTemplate("orderer/orderer_statefulset.yaml")
 	if err != nil {
 		log.Error(err, "Failed to load statefulset.")
@@ -224,6 +320,41 @@ func (r *ReconcileOrderer) newSTSForCR(cr *fabricv1alpha1.Orderer, request recon
 		sts.Spec.Template.Labels["k8s-app"] = sts.Name
 		sts.Spec.Template.Spec.Containers[0].Image =
 			fabric.GetDefault(cr.Spec.Image, "hyperledger/fabric-orderer:1.4.1").(string)
+		if secret != nil {
+			sts.Spec.Template.Spec.Volumes[0].VolumeSource.Secret.SecretName = request.Name + "-secret"
+
+			secretItems := []corev1.KeyToPath{}
+			for i, _ := range cr.Spec.Certs.Msp.AdminCerts {
+				secretName := "adminCert-"+strconv.Itoa(i)
+				secretItems = append(secretItems, corev1.KeyToPath{
+					Key: secretName, Path: "/crypto/msp/admincerts/" + secretName,
+				})
+			}
+			
+			for i, _ := range cr.Spec.Certs.Msp.CaCerts {
+				secretName := "caCert-"+strconv.Itoa(i)
+				secretItems = append(secretItems, corev1.KeyToPath{
+					Key: secretName, Path: "/crypto/msp/cacerts/" + secretName,
+				})
+			}
+
+			secretItems = append(secretItems, corev1.KeyToPath{
+				Key: "keyStore", Path: "/crypto/msp/keystore",
+			})
+
+			secretItems = append(secretItems, corev1.KeyToPath{
+				Key: "signCerts", Path: "/crypto/msp/signCerts",
+			})
+
+			for i, _ := range cr.Spec.Certs.Msp.TLSCacerts {
+				secretName := "tlsCacerts-"+strconv.Itoa(i)
+				secretItems = append(secretItems, corev1.KeyToPath{
+					Key: secretName, Path: "/crypto/msp/tlscacerts/" + secretName,
+				})
+			}
+
+			sts.Spec.Template.Spec.Volumes[0].VolumeSource.Secret.Items = secretItems
+		}
 		containerEnvs := []corev1.EnvVar{}
 		for _, e := range cr.Spec.ConfigParams {
 			containerEnvs = append(containerEnvs, corev1.EnvVar{
