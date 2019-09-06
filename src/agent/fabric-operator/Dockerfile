@@ -14,4 +14,4 @@ WORKDIR /app
 
 ENV KUBECONFIG /app/.kube/config
 
-CMD sh /app/deploy_cr.sh
+CMD sh /app/agent_operation.sh
