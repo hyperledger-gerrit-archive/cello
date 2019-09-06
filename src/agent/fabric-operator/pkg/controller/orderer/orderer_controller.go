@@ -3,6 +3,8 @@ package orderer
 import (
 	"context"
 	"strconv"
+	"strings"
+	"time"
 
 	fabric "github.com/hyperledger/cello/src/agent/fabric-operator/pkg/apis/fabric"
 	fabricv1alpha1 "github.com/hyperledger/cello/src/agent/fabric-operator/pkg/apis/fabric/v1alpha1"
@@ -12,6 +14,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -119,6 +124,22 @@ func (r *ReconcileOrderer) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
+	secretID := request.Name + "-secret"
+	foundSecret := &corev1.Secret{}
+	err = r.client.Get(context.TODO(),
+		types.NamespacedName{Name: secretID, Namespace: request.Namespace},
+		foundSecret)
+	if err != nil && errors.IsNotFound(err) {
+		secret := r.newSecretForCR(instance, request)
+		err = r.client.Create(context.TODO(), secret)
+		if err != nil {
+			reqLogger.Error(err, "Failed to retrieve Fabric Orderer secrets")
+			return reconcile.Result{}, err
+		}
+		// When we reach here, it means that we have created the secret successfully
+		// and ready to do more
+	}
+
 	foundService := &corev1.Service{}
 	err = r.client.Get(context.TODO(), request.NamespacedName, foundService)
 	if err != nil && errors.IsNotFound(err) {
@@ -185,6 +206,26 @@ func (r *ReconcileOrderer) Reconcile(request reconcile.Request) (reconcile.Resul
 	}
 
 	return reconcile.Result{}, nil
+}
+
+// newSecretForCR returns k8s secret with the name + "-secret" /namespace as the cr
+func (r *ReconcileCA) newSecretForCR(cr *fabricv1alpha1.Orderer, request reconcile.Request) *corev1.Secret {
+	obj, _, _ := fabric.GetObjectFromTemplate("orderer/orderer_secret.yaml")
+	secret, ok := obj.(*corev1.Secret)
+	if !ok {
+		secret = nil
+	} else {
+		secret.Name = request.Name + "-secret"
+		secret.Namespace = request.Namespace
+		if cr.Spec.Certs != nil {
+			secret.Data["cert"] = []byte(cr.Spec.Certs.Cert)
+			secret.Data["key"] = []byte(cr.Spec.Certs.Key)
+			secret.Data["tlsCert"] = []byte(cr.Spec.Certs.TLSCert)
+			secret.Data["tlsKey"] = []byte(cr.Spec.Certs.TLSKey)
+		}
+		controllerutil.SetControllerReference(cr, secret, r.scheme)
+	}
+	return secret
 }
 
 // newServiceForCR returns a fabric Orderer service with the same name/namespace as the cr

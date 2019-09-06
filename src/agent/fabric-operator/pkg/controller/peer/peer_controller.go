@@ -3,6 +3,8 @@ package peer
 import (
 	"context"
 	"strconv"
+	"strings"
+	"time"
 
 	fabric "github.com/hyperledger/cello/src/agent/fabric-operator/pkg/apis/fabric"
 	fabricv1alpha1 "github.com/hyperledger/cello/src/agent/fabric-operator/pkg/apis/fabric/v1alpha1"
@@ -12,6 +14,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -63,6 +68,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// Watch for changes to secret that we create
+	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &fabricv1alpha1.CA{},
+	})
+	if err != nil {
+		return err
+	}
+
 	// Watch for changes to services that we create
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
@@ -84,6 +98,7 @@ type ReconcilePeer struct {
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
+	kubeconfig *rest.Config
 }
 
 // Reconcile reads that state of the cluster for a Peer object and makes changes based on the state read
@@ -117,6 +132,22 @@ func (r *ReconcilePeer) Reconcile(request reconcile.Request) (reconcile.Result, 
 		// Error reading the object - requeue the request.
 		reqLogger.Error(err, "Failed to get Peer.")
 		return reconcile.Result{}, err
+	}
+
+	secretID := request.Name + "-secret"
+	foundSecret := &corev1.Secret{}
+	err = r.client.Get(context.TODO(),
+		types.NamespacedName{Name: secretID, Namespace: request.Namespace},
+		foundSecret)
+	if err != nil && errors.IsNotFound(err) {
+		secret := r.newSecretForCR(instance, request)
+		err = r.client.Create(context.TODO(), secret)
+		if err != nil {
+			reqLogger.Error(err, "Failed to retrieve Fabric CA secrets")
+			return reconcile.Result{}, err
+		}
+		// When we reach here, it means that we have created the secret successfully
+		// and ready to do more
 	}
 
 	foundService := &corev1.Service{}
@@ -187,6 +218,25 @@ func (r *ReconcilePeer) Reconcile(request reconcile.Request) (reconcile.Result, 
 	return reconcile.Result{}, nil
 }
 
+// newSecretForCR returns k8s secret with the name + "-secret" /namespace as the cr
+func (r *ReconcileCA) newSecretForCR(cr *fabricv1alpha1.Peer, request reconcile.Request) *corev1.Secret {
+	obj, _, _ := fabric.GetObjectFromTemplate("peer/peer_secret.yaml")
+	secret, ok := obj.(*corev1.Secret)
+	if !ok {
+		secret = nil
+	} else {
+		secret.Name = request.Name + "-secret"
+		secret.Namespace = request.Namespace
+		if cr.Spec.Certs != nil {
+			secret.Data["tlsCert"] = []byte(cr.Spec.Certs.Tls.TLSCerts)
+			secret.Data["tlsKey"] = []byte(cr.Spec.Certs.Tls.TLSKey)
+			secret.Data["tlsRootcert"] = []byte(cr.Spec.Certs.Tls.TLSRootcert)
+		}
+		controllerutil.SetControllerReference(cr, secret, r.scheme)
+	}
+	return secret
+}
+
 // newServiceForCR returns a fabric Peer service with the same name/namespace as the cr
 func (r *ReconcilePeer) newServiceForCR(cr *fabricv1alpha1.Peer, request reconcile.Request) *corev1.Service {
 	obj, _, _ := fabric.GetObjectFromTemplate("peer/peer_service.yaml")
@@ -224,6 +274,8 @@ func (r *ReconcilePeer) newSTSForCR(cr *fabricv1alpha1.Peer, request reconcile.R
 		sts.Spec.Template.Labels["k8s-app"] = sts.Name
 		sts.Spec.Template.Spec.Containers[0].Image =
 			fabric.GetDefault(cr.Spec.Image, "hyperledger/fabric-peer:1.4.1").(string)
+		sts.Spec.Template.Spec.Volumes[0].VolumeSource.Secret.SecretName = request.Name + "-secret"
+		
 		containerEnvs := []corev1.EnvVar{}
 		for _, e := range cr.Spec.ConfigParams {
 			containerEnvs = append(containerEnvs, corev1.EnvVar{
