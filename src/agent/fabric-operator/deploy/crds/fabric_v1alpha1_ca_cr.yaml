@@ -13,8 +13,8 @@ spec:
   image: "hyperledger/fabric-ca:1.4.1"
 
   # Specify storage being used by this Certificate Authority.
-  storageSize: "1Gi"
-  storageClass: "default"
+  #storageClass: "default"
+  #storageSize: "1Gi"
 
   # If you have an set of certs that you like to use instead of
   # generating a set by Fabric CA, you can specify as the following.
