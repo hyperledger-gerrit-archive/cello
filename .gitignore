@@ -133,7 +133,7 @@ fabric.properties
 ### Eclipse template
 
 .metadata
-bin/
+./bin/
 tmp/
 *.tmp
 *.bak
