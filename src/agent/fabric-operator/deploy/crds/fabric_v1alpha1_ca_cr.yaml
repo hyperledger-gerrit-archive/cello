@@ -1,11 +1,9 @@
 apiVersion: fabric.hyperledger.org/v1alpha1
 kind: CA
 metadata:
-  name: tong-ca
+  name: ca1st
 spec:
-  # Use secret to hold fabric ca server admin user id and password
-  # Before creating the ca server, you will need to make sure that
-  # you have the k8s secret created.
+  # The CA admin id and password to start up a CA server
   admin: "sampleadmin"
   adminPassword: "samplepassword"
   # Specify storage being used by this Certificate Authority.
